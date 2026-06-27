@@ -10,31 +10,39 @@ const statusColors = {
   rejected:    { bg: '#FAECE7', tc: '#D85A30' },
 }
 
+const typeIcons = { project: '💼', website: '🌐', video: '🎥', article: '📝', other: '🔗' }
+
 export default function CandidateDashboard() {
   const { profile } = useAuth()
   const navigate = useNavigate()
   const [tab, setTab] = useState('profile')
   const [applications, setApplications] = useState([])
+  const [portfolio, setPortfolio] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (profile) {
-      supabase
-        .from('applications')
-        .select(`
-          *,
-          jobs (title, company_name, location),
-          video_responses (id, type, video_url),
-          projects (id, title, project_url)
-        `)
-        .eq('candidate_id', profile.id)
-        .order('created_at', { ascending: false })
-        .then(({ data }) => {
-          setApplications(data || [])
-          setLoading(false)
-        })
+      loadData()
     }
   }, [profile])
+
+  async function loadData() {
+    const [appsRes, portRes] = await Promise.all([
+      supabase
+        .from('applications')
+        .select(`*, jobs (title, company_name, location), video_responses (id, type, video_url), projects (id, title, project_url)`)
+        .eq('candidate_id', profile.id)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('portfolio_items')
+        .select('*')
+        .eq('candidate_id', profile.id)
+        .order('created_at', { ascending: false })
+    ])
+    setApplications(appsRes.data || [])
+    setPortfolio(portRes.data || [])
+    setLoading(false)
+  }
 
   const initials = profile?.full_name
     ? profile.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
@@ -49,13 +57,14 @@ export default function CandidateDashboard() {
   return (
     <div>
       <div className="subtabs">
-        {['profile', 'applications'].map(t => (
+        {['profile', 'portfolio', 'applications'].map(t => (
           <button key={t} className={`subtab${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>
             {t} {t === 'applications' && applications.length > 0 ? `(${applications.length})` : ''}
           </button>
         ))}
       </div>
 
+      {/* PROFILE TAB */}
       {tab === 'profile' && (
         <div>
           <div className="card">
@@ -64,15 +73,19 @@ export default function CandidateDashboard() {
                 {initials}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontWeight: 500, fontSize: 16, marginBottom: 2 }}>
-                  {profile?.full_name || 'Your Name'}
-                </p>
-                <p style={{ fontSize: 13, color: '#666', marginBottom: profile?.location ? 3 : 0 }}>
+                <p style={{ fontWeight: 500, fontSize: 16, marginBottom: 2 }}>{profile?.full_name || 'Your Name'}</p>
+                <p style={{ fontSize: 13, color: '#666', marginBottom: 3 }}>
                   {profile?.headline || 'Add a headline to your profile'}
                 </p>
-                {profile?.location && (
-                  <p style={{ fontSize: 12, color: '#888' }}>📍 {profile.location}</p>
-                )}
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                  {profile?.location && <p style={{ fontSize: 12, color: '#888' }}>📍 {profile.location}</p>}
+                  {profile?.linkedin_url && (
+                    <a href={profile.linkedin_url} target="_blank" rel="noreferrer"
+                      style={{ fontSize: 12, color: '#0A66C2', textDecoration: 'none', fontWeight: 500 }}>
+                      LinkedIn ↗
+                    </a>
+                  )}
+                </div>
               </div>
               <Link to="/profile" style={{ flexShrink: 0 }}>
                 <button className="btn btn-outline" style={{ fontSize: 12, padding: '5px 12px' }}>Edit</button>
@@ -86,10 +99,26 @@ export default function CandidateDashboard() {
             )}
           </div>
 
-          {(!profile?.headline || skillList.length === 0) && (
+          {/* Intro video */}
+          {profile?.intro_video_url && (
+            <div className="card" style={{ marginTop: 10, background: '#E1F5EE', border: 'none' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div className="play-btn" style={{ background: '#1D9E75', flexShrink: 0 }}>
+                  <div className="play-triangle" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontWeight: 500, fontSize: 13, color: '#0F6E56', margin: 0 }}>Intro video</p>
+                  <a href={profile.intro_video_url} target="_blank" rel="noreferrer"
+                    style={{ fontSize: 12, color: '#0F6E56', opacity: 0.8 }}>Watch ↗</a>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {(!profile?.headline || skillList.length === 0 || !profile?.intro_video_url) && (
             <Link to="/profile" style={{ textDecoration: 'none' }}>
               <div style={{ marginTop: 10, background: '#FAEEDA', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: '#BA7517', cursor: 'pointer' }}>
-                ✏️ Complete your profile — add a headline and skills to stand out
+                ✏️ Complete your profile — add a headline, skills, LinkedIn, and intro video
               </div>
             </Link>
           )}
@@ -103,6 +132,10 @@ export default function CandidateDashboard() {
               <div className="stat-value" style={{ color: '#BA7517' }}>{shortlisted}</div>
               <div className="stat-label">Shortlisted</div>
             </div>
+            <div className="stat-card">
+              <div className="stat-value" style={{ color: '#534AB7' }}>{portfolio.length}</div>
+              <div className="stat-label">Portfolio items</div>
+            </div>
           </div>
 
           <button className="btn btn-primary" style={{ width: '100%', marginTop: 16 }} onClick={() => navigate('/jobs')}>
@@ -111,10 +144,52 @@ export default function CandidateDashboard() {
         </div>
       )}
 
+      {/* PORTFOLIO TAB */}
+      {tab === 'portfolio' && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <p style={{ fontSize: 15, fontWeight: 500 }}>Your portfolio</p>
+            <Link to="/profile">
+              <button className="btn btn-outline" style={{ fontSize: 12, padding: '5px 12px' }}>+ Add item</button>
+            </Link>
+          </div>
+
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 40, color: '#666' }}>Loading...</div>
+          ) : portfolio.length === 0 ? (
+            <div className="card" style={{ textAlign: 'center', padding: 40 }}>
+              <p style={{ color: '#666', marginBottom: 6, fontSize: 14 }}>No portfolio items yet</p>
+              <p style={{ color: '#888', fontSize: 12, marginBottom: 16 }}>Add projects, websites, videos, or articles to stand out</p>
+              <Link to="/profile"><button className="btn btn-primary">Add your first item</button></Link>
+            </div>
+          ) : (
+            portfolio.map(item => (
+              <div key={item.id} className="card" style={{ marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: item.description ? 6 : 0 }}>
+                  <span style={{ fontSize: 16 }}>{typeIcons[item.type] || '🔗'}</span>
+                  <p style={{ fontWeight: 500, fontSize: 14, flex: 1 }}>{item.title}</p>
+                  <span className="badge" style={{ background: '#f4f4f2', color: '#666', fontSize: 10 }}>{item.type}</span>
+                </div>
+                {item.description && (
+                  <p style={{ fontSize: 13, color: '#666', lineHeight: 1.6, marginBottom: 6 }}>{item.description}</p>
+                )}
+                {item.url && (
+                  <a href={item.url} target="_blank" rel="noreferrer"
+                    style={{ fontSize: 13, color: '#1D9E75', textDecoration: 'none', fontWeight: 500 }}>
+                    View {item.type === 'video' ? 'video' : item.type === 'website' ? 'site' : 'link'} ↗
+                  </a>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* APPLICATIONS TAB */}
       {tab === 'applications' && (
         <div>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: 40, color: '#666' }}>Loading applications...</div>
+            <div style={{ textAlign: 'center', padding: 40, color: '#666' }}>Loading...</div>
           ) : applications.length === 0 ? (
             <div className="card" style={{ textAlign: 'center', padding: 48 }}>
               <p style={{ color: '#666', marginBottom: 14 }}>No applications yet</p>
@@ -136,7 +211,7 @@ export default function CandidateDashboard() {
                     </div>
                     <span className="badge" style={{ background: sc.bg, color: sc.tc, flexShrink: 0 }}>{app.status}</span>
                   </div>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
                     {hasIntro && <span className="badge badge-green">🎥 Intro</span>}
                     {hasResponse && <span className="badge badge-green">🎥 Response</span>}
                     {hasProject && <span className="badge badge-purple">💼 Project</span>}
