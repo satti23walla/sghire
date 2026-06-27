@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 const industries = ['Fintech', 'Tech', 'Healthcare', 'Government / Statutory', 'Consulting', 'FMCG', 'Logistics', 'Real Estate']
 
 const steps = [
   { n: '1', title: 'Record your 2-min video', desc: 'Candidate or HM records a short intro or role overview', bg: '#E1F5EE', tc: '#0F6E56' },
   { n: '2', title: 'Browse & match', desc: 'See real role expectations and candidate profiles before committing', bg: '#EEEDFE', tc: '#534AB7' },
-  { n: '3', title: 'Get referrals', desc: 'Former colleagues vouch via on-demand video references', bg: '#FAEEDA', tc: '#BA7517' },
+  { n: '3', title: 'Apply with context', desc: 'Submit your intro video, job response, and project showcase', bg: '#FAEEDA', tc: '#BA7517' },
   { n: '4', title: 'Pre-screen confidently', desc: 'Both sides save time — only connect when there is a real fit', bg: '#FAECE7', tc: '#D85A30' },
 ]
 
@@ -18,6 +19,18 @@ const stats = [
 
 export default function Landing() {
   const nav = useNavigate()
+  const { user, profile } = useAuth()
+
+  function handleCandidate() {
+    if (user) nav(profile?.role === 'candidate' ? '/candidate' : '/employer')
+    else nav('/auth')
+  }
+
+  function handleHiring() {
+    if (user) nav(profile?.role === 'employer' ? '/employer' : '/candidate')
+    else nav('/auth')
+  }
+
   return (
     <div>
       <div style={{ textAlign: 'center', padding: '36px 0 28px' }}>
@@ -30,8 +43,12 @@ export default function Landing() {
           Video-first pre-screening for SG candidates and hiring managers. See real expectations, real people — before you apply or interview.
         </p>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <button className="btn btn-primary" onClick={() => nav('/candidate')}>I'm a candidate</button>
-          <button className="btn btn-outline" onClick={() => nav('/hiring')}>I'm hiring</button>
+          <button className="btn btn-primary" onClick={handleCandidate}>
+            {user && profile?.role === 'candidate' ? 'My dashboard →' : "I'm a candidate"}
+          </button>
+          <button className="btn btn-outline" onClick={handleHiring}>
+            {user && profile?.role === 'employer' ? 'My dashboard →' : "I'm hiring"}
+          </button>
         </div>
       </div>
 
