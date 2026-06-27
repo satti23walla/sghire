@@ -18,48 +18,51 @@ export default function CandidateDashboard() {
   const [tab, setTab] = useState('profile')
   const [applications, setApplications] = useState([])
   const [portfolio, setPortfolio] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [dataError, setDataError] = useState('')
+  const [loadingApps, setLoadingApps] = useState(true)
+  const [loadingPortfolio, setLoadingPortfolio] = useState(true)
 
   useEffect(() => {
-    if (profile?.id) {
-      loadApplications()
-      loadPortfolio()
-    }
+    if (!profile?.id) return
+    loadApplications()
+    loadPortfolio()
   }, [profile?.id])
 
   async function loadApplications() {
+    setLoadingApps(true)
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('applications')
         .select('*, jobs (title, company_name, location), video_responses (id, type, video_url), projects (id, title, project_url)')
         .eq('candidate_id', profile.id)
         .order('created_at', { ascending: false })
-      if (error) throw error
       setApplications(data || [])
     } catch (e) {
-      console.error('Applications error:', e)
+      console.error('loadApplications error:', e)
+      setApplications([])
+    } finally {
+      setLoadingApps(false)
     }
   }
 
   async function loadPortfolio() {
+    setLoadingPortfolio(true)
     try {
       const { data, error } = await supabase
         .from('portfolio_items')
         .select('*')
         .eq('candidate_id', profile.id)
         .order('created_at', { ascending: false })
-      if (error) throw error
+      if (error) console.error('Portfolio query error:', error)
       setPortfolio(data || [])
     } catch (e) {
-      console.error('Portfolio error:', e)
-      setDataError(e.message)
+      console.error('loadPortfolio error:', e)
+      setPortfolio([])
     } finally {
-      setLoading(false)
+      setLoadingPortfolio(false)
     }
   }
 
-  if (!profile) return <div style={{ padding: 40, textAlign: 'center', color: '#666' }}>Loading profile...</div>
+  if (!profile) return <div style={{ padding: 40, textAlign: 'center', color: '#666' }}>Loading...</div>
 
   const initials = profile.full_name
     ? profile.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
@@ -73,12 +76,6 @@ export default function CandidateDashboard() {
 
   return (
     <div>
-      {dataError && (
-        <div style={{ background: '#FAECE7', color: '#D85A30', padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 16 }}>
-          Error: {dataError}
-        </div>
-      )}
-
       <div className="subtabs">
         {['profile', 'portfolio', 'applications'].map(t => (
           <button key={t} className={`subtab${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>
@@ -87,6 +84,7 @@ export default function CandidateDashboard() {
         ))}
       </div>
 
+      {/* PROFILE TAB */}
       {tab === 'profile' && (
         <div>
           <div className="card">
@@ -95,9 +93,7 @@ export default function CandidateDashboard() {
                 {initials}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontWeight: 500, fontSize: 16, marginBottom: 2 }}>
-                  {profile.full_name || 'Your Name'}
-                </p>
+                <p style={{ fontWeight: 500, fontSize: 16, marginBottom: 2 }}>{profile.full_name || 'Your Name'}</p>
                 <p style={{ fontSize: 13, color: '#666', marginBottom: 3 }}>
                   {profile.headline || 'Add a headline to your profile'}
                 </p>
@@ -167,28 +163,37 @@ export default function CandidateDashboard() {
         </div>
       )}
 
+      {/* PORTFOLIO TAB */}
       {tab === 'portfolio' && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <p style={{ fontSize: 15, fontWeight: 500 }}>Your portfolio</p>
+            <div>
+              <p style={{ fontSize: 15, fontWeight: 500 }}>Your portfolio</p>
+              <p style={{ fontSize: 12, color: '#666' }}>Projects · Websites · Videos · Articles</p>
+            </div>
             <Link to="/profile">
               <button className="btn btn-outline" style={{ fontSize: 12, padding: '5px 12px' }}>+ Add item</button>
             </Link>
           </div>
 
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: 40, color: '#666' }}>Loading...</div>
+          {loadingPortfolio ? (
+            <div style={{ textAlign: 'center', padding: 40, color: '#aaa', fontSize: 13 }}>Loading...</div>
           ) : portfolio.length === 0 ? (
             <div className="card" style={{ textAlign: 'center', padding: 40 }}>
-              <p style={{ color: '#666', marginBottom: 6, fontSize: 14 }}>No portfolio items yet</p>
-              <p style={{ color: '#888', fontSize: 12, marginBottom: 16 }}>Add projects, websites, videos, or articles</p>
-              <Link to="/profile"><button className="btn btn-primary">Add your first item</button></Link>
+              <p style={{ fontSize: 32, marginBottom: 10 }}>💼</p>
+              <p style={{ fontWeight: 500, fontSize: 15, marginBottom: 6 }}>No portfolio items yet</p>
+              <p style={{ color: '#666', fontSize: 13, marginBottom: 16, lineHeight: 1.6 }}>
+                Showcase your work — add projects, websites,<br />videos, or articles to stand out to employers
+              </p>
+              <Link to="/profile">
+                <button className="btn btn-primary">Add your first item</button>
+              </Link>
             </div>
           ) : (
             portfolio.map(item => (
               <div key={item.id} className="card" style={{ marginBottom: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: item.description ? 6 : 0 }}>
-                  <span style={{ fontSize: 16 }}>{typeIcons[item.type] || '🔗'}</span>
+                  <span style={{ fontSize: 18 }}>{typeIcons[item.type] || '🔗'}</span>
                   <p style={{ fontWeight: 500, fontSize: 14, flex: 1 }}>{item.title}</p>
                   <span className="badge" style={{ background: '#f4f4f2', color: '#666', fontSize: 10 }}>{item.type}</span>
                 </div>
@@ -207,13 +212,18 @@ export default function CandidateDashboard() {
         </div>
       )}
 
+      {/* APPLICATIONS TAB */}
       {tab === 'applications' && (
         <div>
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: 40, color: '#666' }}>Loading...</div>
+          {loadingApps ? (
+            <div style={{ textAlign: 'center', padding: 40, color: '#aaa', fontSize: 13 }}>Loading...</div>
           ) : applications.length === 0 ? (
             <div className="card" style={{ textAlign: 'center', padding: 48 }}>
-              <p style={{ color: '#666', marginBottom: 14 }}>No applications yet</p>
+              <p style={{ fontSize: 32, marginBottom: 10 }}>📋</p>
+              <p style={{ fontWeight: 500, fontSize: 15, marginBottom: 6 }}>No applications yet</p>
+              <p style={{ color: '#666', fontSize: 13, marginBottom: 16 }}>
+                Browse open roles and apply to get started
+              </p>
               <button className="btn btn-primary" onClick={() => navigate('/jobs')}>Browse jobs</button>
             </div>
           ) : (
