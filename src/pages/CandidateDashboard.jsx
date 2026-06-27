@@ -19,36 +19,53 @@ export default function CandidateDashboard() {
   const [applications, setApplications] = useState([])
   const [portfolio, setPortfolio] = useState([])
   const [loading, setLoading] = useState(true)
+  const [dataError, setDataError] = useState('')
 
   useEffect(() => {
-    if (profile) {
-      loadData()
+    if (profile?.id) {
+      loadApplications()
+      loadPortfolio()
     }
-  }, [profile])
+  }, [profile?.id])
 
-  async function loadData() {
-    const [appsRes, portRes] = await Promise.all([
-      supabase
+  async function loadApplications() {
+    try {
+      const { data, error } = await supabase
         .from('applications')
-        .select(`*, jobs (title, company_name, location), video_responses (id, type, video_url), projects (id, title, project_url)`)
+        .select('*, jobs (title, company_name, location), video_responses (id, type, video_url), projects (id, title, project_url)')
         .eq('candidate_id', profile.id)
-        .order('created_at', { ascending: false }),
-      supabase
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      setApplications(data || [])
+    } catch (e) {
+      console.error('Applications error:', e)
+    }
+  }
+
+  async function loadPortfolio() {
+    try {
+      const { data, error } = await supabase
         .from('portfolio_items')
         .select('*')
         .eq('candidate_id', profile.id)
         .order('created_at', { ascending: false })
-    ])
-    setApplications(appsRes.data || [])
-    setPortfolio(portRes.data || [])
-    setLoading(false)
+      if (error) throw error
+      setPortfolio(data || [])
+    } catch (e) {
+      console.error('Portfolio error:', e)
+      setDataError(e.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const initials = profile?.full_name
+  if (!profile) return <div style={{ padding: 40, textAlign: 'center', color: '#666' }}>Loading profile...</div>
+
+  const initials = profile.full_name
     ? profile.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
     : '?'
 
-  const skillList = profile?.skills
+  const skillList = profile.skills
     ? profile.skills.split(',').map(s => s.trim()).filter(Boolean)
     : []
 
@@ -56,15 +73,20 @@ export default function CandidateDashboard() {
 
   return (
     <div>
+      {dataError && (
+        <div style={{ background: '#FAECE7', color: '#D85A30', padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 16 }}>
+          Error: {dataError}
+        </div>
+      )}
+
       <div className="subtabs">
         {['profile', 'portfolio', 'applications'].map(t => (
           <button key={t} className={`subtab${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>
-            {t} {t === 'applications' && applications.length > 0 ? `(${applications.length})` : ''}
+            {t}{t === 'applications' && applications.length > 0 ? ` (${applications.length})` : ''}
           </button>
         ))}
       </div>
 
-      {/* PROFILE TAB */}
       {tab === 'profile' && (
         <div>
           <div className="card">
@@ -73,13 +95,15 @@ export default function CandidateDashboard() {
                 {initials}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontWeight: 500, fontSize: 16, marginBottom: 2 }}>{profile?.full_name || 'Your Name'}</p>
+                <p style={{ fontWeight: 500, fontSize: 16, marginBottom: 2 }}>
+                  {profile.full_name || 'Your Name'}
+                </p>
                 <p style={{ fontSize: 13, color: '#666', marginBottom: 3 }}>
-                  {profile?.headline || 'Add a headline to your profile'}
+                  {profile.headline || 'Add a headline to your profile'}
                 </p>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  {profile?.location && <p style={{ fontSize: 12, color: '#888' }}>📍 {profile.location}</p>}
-                  {profile?.linkedin_url && (
+                  {profile.location && <p style={{ fontSize: 12, color: '#888' }}>📍 {profile.location}</p>}
+                  {profile.linkedin_url && (
                     <a href={profile.linkedin_url} target="_blank" rel="noreferrer"
                       style={{ fontSize: 12, color: '#0A66C2', textDecoration: 'none', fontWeight: 500 }}>
                       LinkedIn ↗
@@ -99,14 +123,13 @@ export default function CandidateDashboard() {
             )}
           </div>
 
-          {/* Intro video */}
-          {profile?.intro_video_url && (
+          {profile.intro_video_url && (
             <div className="card" style={{ marginTop: 10, background: '#E1F5EE', border: 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div className="play-btn" style={{ background: '#1D9E75', flexShrink: 0 }}>
                   <div className="play-triangle" />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div>
                   <p style={{ fontWeight: 500, fontSize: 13, color: '#0F6E56', margin: 0 }}>Intro video</p>
                   <a href={profile.intro_video_url} target="_blank" rel="noreferrer"
                     style={{ fontSize: 12, color: '#0F6E56', opacity: 0.8 }}>Watch ↗</a>
@@ -115,10 +138,10 @@ export default function CandidateDashboard() {
             </div>
           )}
 
-          {(!profile?.headline || skillList.length === 0 || !profile?.intro_video_url) && (
+          {(!profile.headline || skillList.length === 0) && (
             <Link to="/profile" style={{ textDecoration: 'none' }}>
               <div style={{ marginTop: 10, background: '#FAEEDA', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: '#BA7517', cursor: 'pointer' }}>
-                ✏️ Complete your profile — add a headline, skills, LinkedIn, and intro video
+                ✏️ Complete your profile — add a headline, skills, LinkedIn and intro video
               </div>
             </Link>
           )}
@@ -134,7 +157,7 @@ export default function CandidateDashboard() {
             </div>
             <div className="stat-card">
               <div className="stat-value" style={{ color: '#534AB7' }}>{portfolio.length}</div>
-              <div className="stat-label">Portfolio items</div>
+              <div className="stat-label">Portfolio</div>
             </div>
           </div>
 
@@ -144,7 +167,6 @@ export default function CandidateDashboard() {
         </div>
       )}
 
-      {/* PORTFOLIO TAB */}
       {tab === 'portfolio' && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -159,7 +181,7 @@ export default function CandidateDashboard() {
           ) : portfolio.length === 0 ? (
             <div className="card" style={{ textAlign: 'center', padding: 40 }}>
               <p style={{ color: '#666', marginBottom: 6, fontSize: 14 }}>No portfolio items yet</p>
-              <p style={{ color: '#888', fontSize: 12, marginBottom: 16 }}>Add projects, websites, videos, or articles to stand out</p>
+              <p style={{ color: '#888', fontSize: 12, marginBottom: 16 }}>Add projects, websites, videos, or articles</p>
               <Link to="/profile"><button className="btn btn-primary">Add your first item</button></Link>
             </div>
           ) : (
@@ -176,7 +198,7 @@ export default function CandidateDashboard() {
                 {item.url && (
                   <a href={item.url} target="_blank" rel="noreferrer"
                     style={{ fontSize: 13, color: '#1D9E75', textDecoration: 'none', fontWeight: 500 }}>
-                    View {item.type === 'video' ? 'video' : item.type === 'website' ? 'site' : 'link'} ↗
+                    View ↗
                   </a>
                 )}
               </div>
@@ -185,7 +207,6 @@ export default function CandidateDashboard() {
         </div>
       )}
 
-      {/* APPLICATIONS TAB */}
       {tab === 'applications' && (
         <div>
           {loading ? (
@@ -198,9 +219,6 @@ export default function CandidateDashboard() {
           ) : (
             applications.map(app => {
               const sc = statusColors[app.status] || statusColors.submitted
-              const hasIntro = app.video_responses?.some(v => v.type === 'introduction')
-              const hasResponse = app.video_responses?.some(v => v.type === 'job_response')
-              const hasProject = app.projects?.length > 0
               return (
                 <div key={app.id} className="card" style={{ marginBottom: 10 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
@@ -212,9 +230,9 @@ export default function CandidateDashboard() {
                     <span className="badge" style={{ background: sc.bg, color: sc.tc, flexShrink: 0 }}>{app.status}</span>
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-                    {hasIntro && <span className="badge badge-green">🎥 Intro</span>}
-                    {hasResponse && <span className="badge badge-green">🎥 Response</span>}
-                    {hasProject && <span className="badge badge-purple">💼 Project</span>}
+                    {app.video_responses?.some(v => v.type === 'introduction') && <span className="badge badge-green">🎥 Intro</span>}
+                    {app.video_responses?.some(v => v.type === 'job_response') && <span className="badge badge-green">🎥 Response</span>}
+                    {app.projects?.length > 0 && <span className="badge badge-purple">💼 Project</span>}
                   </div>
                   <p style={{ fontSize: 11, color: '#aaa', marginTop: 8 }}>
                     Applied {new Date(app.created_at).toLocaleDateString('en-SG')}
