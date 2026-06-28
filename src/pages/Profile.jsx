@@ -89,7 +89,7 @@ export default function Profile() {
         setError(err.message)
       } else {
         setSuccess(true)
-        try { await refreshProfile() } catch (_) {}
+        refreshProfile().catch(() => {})
         setTimeout(() => setSuccess(false), 3000)
       }
     } catch (e) {
