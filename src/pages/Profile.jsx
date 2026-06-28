@@ -2,34 +2,30 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 
-const PORTFOLIO_TYPES = ['project', 'website', 'video', 'article', 'other']
-
-const typeIcons = {
-  project: '💼',
-  website: '🌐',
-  video: '🎥',
-  article: '📝',
-  other: '🔗',
-}
+const PORTFOLIO_TYPES = [
+  { key: 'project',  icon: '💼', label: 'Project' },
+  { key: 'website',  icon: '🌐', label: 'Website' },
+  { key: 'video',    icon: '🎥', label: 'Video' },
+  { key: 'article',  icon: '📝', label: 'Article' },
+  { key: 'other',    icon: '🔗', label: 'Other' },
+]
 
 export default function Profile() {
-  const { profile, refreshProfile } = useAuth()
+  const { profile, user, refreshProfile } = useAuth()
 
-  // Profile fields
-  const [fullName, setFullName] = useState(profile?.full_name || '')
-  const [headline, setHeadline] = useState(profile?.headline || '')
-  const [location, setLocation] = useState(profile?.location || '')
-  const [skills, setSkills] = useState(profile?.skills || '')
-  const [companyName, setCompanyName] = useState(profile?.company_name || '')
-  const [linkedinUrl, setLinkedinUrl] = useState(profile?.linkedin_url || '')
-  const [introVideoUrl, setIntroVideoUrl] = useState(profile?.intro_video_url || '')
+  const [fullName, setFullName] = useState('')
+  const [headline, setHeadline] = useState('')
+  const [location, setLocation] = useState('')
+  const [skills, setSkills] = useState('')
+  const [companyName, setCompanyName] = useState('')
+  const [linkedinUrl, setLinkedinUrl] = useState('')
+  const [introVideoUrl, setIntroVideoUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
-  // Portfolio
   const [portfolio, setPortfolio] = useState([])
-  const [loadingPortfolio, setLoadingPortfolio] = useState(true)
+  const [loadingPortfolio, setLoadingPortfolio] = useState(false)
   const [showAddItem, setShowAddItem] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
@@ -37,18 +33,34 @@ export default function Profile() {
   const [newUrl, setNewUrl] = useState('')
   const [addingItem, setAddingItem] = useState(false)
 
+  // Sync form state when profile loads
   useEffect(() => {
-    if (profile?.role === 'candidate') loadPortfolio()
-  }, [profile])
+    if (profile) {
+      setFullName(profile.full_name || '')
+      setHeadline(profile.headline || '')
+      setLocation(profile.location || '')
+      setSkills(profile.skills || '')
+      setCompanyName(profile.company_name || '')
+      setLinkedinUrl(profile.linkedin_url || '')
+      setIntroVideoUrl(profile.intro_video_url || '')
+      if (profile.role === 'candidate') loadPortfolio()
+    }
+  }, [profile?.id])
 
   async function loadPortfolio() {
-    const { data } = await supabase
-      .from('portfolio_items')
-      .select('*')
-      .eq('candidate_id', profile.id)
-      .order('created_at', { ascending: false })
-    setPortfolio(data || [])
-    setLoadingPortfolio(false)
+    setLoadingPortfolio(true)
+    try {
+      const { data } = await supabase
+        .from('portfolio_items')
+        .select('*')
+        .eq('candidate_id', profile.id)
+        .order('created_at', { ascending: false })
+      setPortfolio(data || [])
+    } catch (e) {
+      setPortfolio([])
+    } finally {
+      setLoadingPortfolio(false)
+    }
   }
 
   async function handleSave(e) {
@@ -57,57 +69,64 @@ export default function Profile() {
     setError('')
     setSuccess(false)
 
-    const updates = {
-      full_name: fullName,
-      location,
-      ...(profile.role === 'candidate'
-        ? { headline, skills, linkedin_url: linkedinUrl, intro_video_url: introVideoUrl }
-        : { company_name: companyName }
-      ),
-    }
+    try {
+      const updates = {
+        full_name: fullName,
+        location,
+        ...(profile.role === 'candidate'
+          ? { headline, skills, linkedin_url: linkedinUrl, intro_video_url: introVideoUrl }
+          : { company_name: companyName }
+        ),
+      }
 
-    const { error: err } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', profile.id)
+      const { error: err } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', profile.id)
+        .select()
 
-    if (err) {
-      setError(err.message)
-    } else {
-      setSuccess(true)
-      await refreshProfile()
-      setTimeout(() => setSuccess(false), 3000)
+      if (err) {
+        setError(err.message)
+      } else {
+        setSuccess(true)
+        try { await refreshProfile() } catch (_) {}
+        setTimeout(() => setSuccess(false), 3000)
+      }
+    } catch (e) {
+      setError(e.message || 'Something went wrong')
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
   }
 
   async function handleAddItem(e) {
     e.preventDefault()
     if (!newTitle.trim()) return
     setAddingItem(true)
-
-    const { error: err } = await supabase.from('portfolio_items').insert({
-      candidate_id: profile.id,
-      title: newTitle.trim(),
-      description: newDesc.trim() || null,
-      type: newType,
-      url: newUrl.trim() || null,
-    })
-
-    if (!err) {
-      setNewTitle(''); setNewDesc(''); setNewUrl(''); setNewType('project')
-      setShowAddItem(false)
-      await loadPortfolio()
+    try {
+      const { error: err } = await supabase.from('portfolio_items').insert({
+        candidate_id: profile.id,
+        title: newTitle.trim(),
+        description: newDesc.trim() || null,
+        type: newType,
+        url: newUrl.trim() || null,
+      })
+      if (!err) {
+        setNewTitle(''); setNewDesc(''); setNewUrl(''); setNewType('project')
+        setShowAddItem(false)
+        await loadPortfolio()
+      }
+    } finally {
+      setAddingItem(false)
     }
-    setAddingItem(false)
   }
 
   async function handleDeleteItem(id) {
     await supabase.from('portfolio_items').delete().eq('id', id)
-    await loadPortfolio()
+    setPortfolio(prev => prev.filter(p => p.id !== id))
   }
 
-  if (!profile) return null
+  if (!profile) return <div style={{ padding: 40, textAlign: 'center', color: '#666' }}>Loading...</div>
 
   return (
     <div>
@@ -118,7 +137,6 @@ export default function Profile() {
           : 'Your company profile is shown on job listings.'}
       </p>
 
-      {/* Main profile form */}
       <div className="card" style={{ marginBottom: 12 }}>
         <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 14, color: '#444' }}>Basic info</p>
 
@@ -161,7 +179,7 @@ export default function Profile() {
             </div>
           )}
 
-          <div style={{ marginBottom: profile.role === 'candidate' ? 12 : 20 }}>
+          <div style={{ marginBottom: 12 }}>
             <label className="form-label">Location</label>
             <input className="form-input" type="text" placeholder="e.g. Singapore" value={location} onChange={e => setLocation(e.target.value)} />
           </div>
@@ -179,7 +197,7 @@ export default function Profile() {
                 <input className="form-input" type="url"
                   placeholder="https://loom.com/share/..."
                   value={introVideoUrl} onChange={e => setIntroVideoUrl(e.target.value)} />
-                <p style={{ fontSize: 11, color: '#888', marginTop: 4 }}>A 1–2 min video introducing yourself. This shows on your profile for all applications.</p>
+                <p style={{ fontSize: 11, color: '#888', marginTop: 4 }}>A 1–2 min video introducing yourself. Shows on your profile for all applications.</p>
               </div>
             </>
           )}
@@ -192,7 +210,7 @@ export default function Profile() {
         </form>
       </div>
 
-      {/* Portfolio section — candidates only */}
+      {/* Portfolio — candidates only */}
       {profile.role === 'candidate' && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, marginTop: 8 }}>
@@ -209,25 +227,25 @@ export default function Profile() {
 
           {showAddItem && (
             <div className="card" style={{ marginBottom: 12, background: '#f9f9f7' }}>
-              <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 14 }}>New portfolio item</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <p style={{ fontSize: 13, fontWeight: 500 }}>New portfolio item</p>
+                <button onClick={() => setShowAddItem(false)}
+                  style={{ border: 'none', background: 'none', color: '#aaa', fontSize: 18, cursor: 'pointer' }}>×</button>
+              </div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+                {PORTFOLIO_TYPES.map(t => (
+                  <button key={t.key} type="button" onClick={() => setNewType(t.key)}
+                    style={{
+                      padding: '4px 10px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
+                      border: `1px solid ${newType === t.key ? '#1D9E75' : '#e0e0dc'}`,
+                      background: newType === t.key ? '#E1F5EE' : '#fff',
+                      color: newType === t.key ? '#0F6E56' : '#666',
+                    }}>
+                    {t.icon} {t.label}
+                  </button>
+                ))}
+              </div>
               <form onSubmit={handleAddItem}>
-                <div style={{ marginBottom: 10 }}>
-                  <label className="form-label">Type</label>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
-                    {PORTFOLIO_TYPES.map(t => (
-                      <button key={t} type="button"
-                        onClick={() => setNewType(t)}
-                        style={{
-                          padding: '5px 12px', borderRadius: 20, border: `1px solid ${newType === t ? '#1D9E75' : '#e0e0dc'}`,
-                          background: newType === t ? '#E1F5EE' : '#fff',
-                          color: newType === t ? '#0F6E56' : '#666',
-                          fontSize: 12, cursor: 'pointer', fontWeight: newType === t ? 500 : 400
-                        }}>
-                        {typeIcons[t]} {t}
-                      </button>
-                    ))}
-                  </div>
-                </div>
                 <div style={{ marginBottom: 10 }}>
                   <label className="form-label">Title *</label>
                   <input className="form-input" type="text"
@@ -242,9 +260,8 @@ export default function Profile() {
                     style={{ resize: 'vertical' }} />
                 </div>
                 <div style={{ marginBottom: 14 }}>
-                  <label className="form-label">Link <span style={{ color: '#888', fontWeight: 400 }}>(GitHub, live demo, YouTube, article, etc.)</span></label>
-                  <input className="form-input" type="url"
-                    placeholder="https://..."
+                  <label className="form-label">Link</label>
+                  <input className="form-input" type="url" placeholder="https://..."
                     value={newUrl} onChange={e => setNewUrl(e.target.value)} />
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -258,38 +275,32 @@ export default function Profile() {
           )}
 
           {loadingPortfolio ? (
-            <div style={{ textAlign: 'center', padding: 24, color: '#666', fontSize: 13 }}>Loading...</div>
-          ) : portfolio.length === 0 && !showAddItem ? (
-            <div className="card" style={{ textAlign: 'center', padding: 32, color: '#888' }}>
-              <p style={{ fontSize: 14, marginBottom: 6 }}>No portfolio items yet</p>
-              <p style={{ fontSize: 12 }}>Add projects, websites, videos, or articles to showcase your work</p>
+            <div style={{ textAlign: 'center', padding: 24, color: '#aaa', fontSize: 13 }}>Loading...</div>
+          ) : portfolio.length === 0 ? (
+            <div className="card" style={{ textAlign: 'center', padding: 32, color: '#888', background: '#f9f9f7', border: 'none' }}>
+              <p style={{ fontSize: 13 }}>No portfolio items yet — add your first above</p>
             </div>
           ) : (
-            portfolio.map(item => (
-              <div key={item.id} className="card" style={{ marginBottom: 8 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                      <span style={{ fontSize: 13 }}>{typeIcons[item.type]}</span>
-                      <p style={{ fontWeight: 500, fontSize: 14 }}>{item.title}</p>
-                      <span className="badge" style={{ background: '#f4f4f2', color: '#666', fontSize: 10 }}>{item.type}</span>
+            portfolio.map(item => {
+              const t = PORTFOLIO_TYPES.find(x => x.key === item.type) || PORTFOLIO_TYPES[4]
+              return (
+                <div key={item.id} className="card" style={{ marginBottom: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <span style={{ fontSize: 18, flexShrink: 0 }}>{t.icon}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontWeight: 500, fontSize: 14, marginBottom: 2 }}>{item.title}</p>
+                      {item.description && <p style={{ fontSize: 12, color: '#666', lineHeight: 1.5, marginBottom: 4 }}>{item.description}</p>}
+                      {item.url && (
+                        <a href={item.url} target="_blank" rel="noreferrer"
+                          style={{ fontSize: 12, color: '#1D9E75', textDecoration: 'none' }}>View ↗</a>
+                      )}
                     </div>
-                    {item.description && (
-                      <p style={{ fontSize: 12, color: '#666', lineHeight: 1.5, marginBottom: 4 }}>{item.description}</p>
-                    )}
-                    {item.url && (
-                      <a href={item.url} target="_blank" rel="noreferrer"
-                        style={{ fontSize: 12, color: '#1D9E75', textDecoration: 'none' }}>
-                        View ↗
-                      </a>
-                    )}
+                    <button onClick={() => handleDeleteItem(item.id)}
+                      style={{ border: 'none', background: 'none', color: '#ccc', fontSize: 16, cursor: 'pointer', padding: 0 }}>×</button>
                   </div>
-                  <button onClick={() => handleDeleteItem(item.id)}
-                    style={{ border: 'none', background: 'none', color: '#ccc', fontSize: 16, cursor: 'pointer', padding: '0 4px', flexShrink: 0 }}
-                    title="Remove">×</button>
                 </div>
-              </div>
-            ))
+              )
+            })
           )}
         </div>
       )}
