@@ -79,16 +79,16 @@ export default function Profile() {
         ),
       }
 
-      console.log('1. Starting update for profile:', profile.id)
-      console.log('2. Updates:', updates)
 
-      console.log('3. Sending update to Supabase...')
-      const { error: err } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', profile.id)
-
-      console.log('4. Update complete, error:', err)
+      const { error: err } = await supabase.rpc('update_my_profile', {
+        p_full_name: fullName,
+        p_headline: headline || null,
+        p_location: location || null,
+        p_skills: skills || null,
+        p_company_name: companyName || null,
+        p_linkedin_url: linkedinUrl || null,
+        p_intro_video_url: introVideoUrl || null,
+      })
 
       if (err) {
         setError(err.message)
@@ -101,7 +101,6 @@ export default function Profile() {
       console.log('6. Exception:', e)
       setError(e.message || 'Something went wrong')
     } finally {
-      console.log('7. Finally block reached')
       setSaving(false)
     }
   }
