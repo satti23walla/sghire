@@ -82,19 +82,17 @@ export default function Profile() {
       console.log('1. Starting update for profile:', profile.id)
       console.log('2. Updates:', updates)
 
-      const result = await supabase
+      console.log('3. Sending update to Supabase...')
+      const { error: err } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', profile.id)
-        .select()
 
-      console.log('3. Update result:', result)
+      console.log('4. Update complete, error:', err)
 
-      if (result.error) {
-        console.log('4. Error:', result.error)
-        setError(result.error.message)
+      if (err) {
+        setError(err.message)
       } else {
-        console.log('5. Success!')
         setSuccess(true)
         refreshProfile().catch(() => {})
         setTimeout(() => setSuccess(false), 3000)
