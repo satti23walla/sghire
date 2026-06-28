@@ -6,8 +6,8 @@ export default function Navbar() {
   const { user, profile, signOut } = useAuth()
   const navigate = useNavigate()
 
-  async function handleSignOut() {
-    await signOut()
+  function handleSignOut() {
+    signOut().catch(() => {})
     navigate('/')
   }
 
