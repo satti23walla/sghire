@@ -79,22 +79,31 @@ export default function Profile() {
         ),
       }
 
-      const { error: err } = await supabase
+      console.log('1. Starting update for profile:', profile.id)
+      console.log('2. Updates:', updates)
+
+      const result = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', profile.id)
         .select()
 
-      if (err) {
-        setError(err.message)
+      console.log('3. Update result:', result)
+
+      if (result.error) {
+        console.log('4. Error:', result.error)
+        setError(result.error.message)
       } else {
+        console.log('5. Success!')
         setSuccess(true)
         refreshProfile().catch(() => {})
         setTimeout(() => setSuccess(false), 3000)
       }
     } catch (e) {
+      console.log('6. Exception:', e)
       setError(e.message || 'Something went wrong')
     } finally {
+      console.log('7. Finally block reached')
       setSaving(false)
     }
   }
