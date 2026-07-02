@@ -49,7 +49,7 @@ export default function EmployerDashboard() {
       .from('applications')
       .select(`
         *,
-        profiles!candidate_id (full_name, headline, location, skills),
+        profiles!candidate_id (full_name, headline, location, skills, linkedin_url, intro_video_url),
         video_responses (id, type, video_url),
         projects (id, title, description, project_url)
       `)
@@ -291,15 +291,43 @@ export default function EmployerDashboard() {
                         </div>
                       )}
 
-                      {app.video_responses?.map(v => (
-                        <div key={v.id} style={{ marginBottom: 6 }}>
-                          <a href={v.video_url} target="_blank" rel="noreferrer"
-                            style={{ fontSize: 13, color: '#1D9E75', textDecoration: 'none' }}>
-                            🎥 {v.type === 'introduction' ? 'Watch intro video' : 'Watch video response'} ↗
-                          </a>
+                      {/* Cover note */}
+                      {app.cover_note && (
+                        <div style={{ background: '#f9f9f7', borderRadius: 8, padding: '10px 12px', marginBottom: 10, borderLeft: '3px solid #1D9E75' }}>
+                          <p style={{ fontSize: 11, color: '#888', marginBottom: 4, fontWeight: 500 }}>NOTE FROM CANDIDATE</p>
+                          <p style={{ fontSize: 13, color: '#444', lineHeight: 1.6 }}>{app.cover_note}</p>
                         </div>
-                      ))}
+                      )}
 
+                      {/* Links */}
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                        {app.reference_url && (
+                          <a href={app.reference_url} target="_blank" rel="noreferrer"
+                            style={{ fontSize: 12, color: '#534AB7', textDecoration: 'none', background: '#EEEDFE', padding: '4px 10px', borderRadius: 20, fontWeight: 500 }}>
+                            🔗 Reference link ↗
+                          </a>
+                        )}
+                        {app.profiles?.linkedin_url && (
+                          <a href={app.profiles.linkedin_url} target="_blank" rel="noreferrer"
+                            style={{ fontSize: 12, color: '#0A66C2', textDecoration: 'none', background: '#E8F0FE', padding: '4px 10px', borderRadius: 20, fontWeight: 500 }}>
+                            LinkedIn ↗
+                          </a>
+                        )}
+                        {app.profiles?.intro_video_url && (
+                          <a href={app.profiles.intro_video_url} target="_blank" rel="noreferrer"
+                            style={{ fontSize: 12, color: '#0F6E56', textDecoration: 'none', background: '#E1F5EE', padding: '4px 10px', borderRadius: 20, fontWeight: 500 }}>
+                            🎥 Intro video ↗
+                          </a>
+                        )}
+                        {app.video_responses?.map(v => (
+                          <a key={v.id} href={v.video_url} target="_blank" rel="noreferrer"
+                            style={{ fontSize: 12, color: '#0F6E56', textDecoration: 'none', background: '#E1F5EE', padding: '4px 10px', borderRadius: 20, fontWeight: 500 }}>
+                            🎥 {v.type === 'job_response' ? 'Video response' : 'Intro video'} ↗
+                          </a>
+                        ))}
+                      </div>
+
+                      {/* Projects */}
                       {app.projects?.map(p => (
                         <div key={p.id} style={{ background: '#f4f4f2', borderRadius: 8, padding: '8px 10px', marginBottom: 6 }}>
                           <p style={{ fontSize: 13, fontWeight: 500 }}>💼 {p.title}</p>
