@@ -53,6 +53,7 @@ export default function CandidateDashboard() {
   const [tSource, setTSource] = useState('linkedin')
   const [tUrl, setTUrl] = useState('')
   const [tNotes, setTNotes] = useState('')
+  const [tVideo, setTVideo] = useState('')
   const [addingTarget, setAddingTarget] = useState(false)
 
   const PORTFOLIO_TYPES = [
@@ -129,7 +130,7 @@ export default function CandidateDashboard() {
       source: tSource, url: tUrl.trim() || null, notes: tNotes.trim() || null,
     })
     if (!error) {
-      setTTitle(''); setTCompany(''); setTUrl(''); setTNotes(''); setTSource('linkedin')
+      setTTitle(''); setTCompany(''); setTUrl(''); setTNotes(''); setTVideo(''); setTSource('linkedin')
       setShowTargetForm(false)
       await loadTargets()
     }
@@ -316,11 +317,18 @@ export default function CandidateDashboard() {
                   <input className="form-input" type="url" placeholder="Paste the link to the job posting..."
                     value={tUrl} onChange={e => setTUrl(e.target.value)} />
                 </div>
-                <div style={{ marginBottom: 16 }}>
+                <div style={{ marginBottom: 12 }}>
                   <label className="form-label">Notes <span style={{ color: '#888', fontWeight: 400 }}>(optional)</span></label>
                   <textarea className="form-input" rows={2}
                     placeholder="Why you're interested, key requirements, who to contact..."
                     value={tNotes} onChange={e => setTNotes(e.target.value)} style={{ resize: 'vertical' }} />
+                </div>
+                <div style={{ marginBottom: 16 }}>
+                  <label className="form-label">🎥 Why you? video <span style={{ color: '#888', fontWeight: 400 }}>(optional)</span></label>
+                  <input className="form-input" type="url"
+                    placeholder="Record a 1–2 min Loom video: why you're a great fit for this role..."
+                    value={tVideo} onChange={e => setTVideo(e.target.value)} />
+                  <p style={{ fontSize: 11, color: '#888', marginTop: 4 }}>Record on Loom (free) and paste the link. Shows alongside your application.</p>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button type="button" className="btn btn-outline" onClick={() => setShowTargetForm(false)}>Cancel</button>
@@ -375,6 +383,12 @@ export default function CandidateDashboard() {
                       <a href={t.url} target="_blank" rel="noreferrer"
                         style={{ fontSize: 12, color: src.color, textDecoration: 'none', fontWeight: 500, background: src.bg, padding: '4px 10px', borderRadius: 20 }}>
                         View posting ↗
+                      </a>
+                    )}
+                    {t.video_url && (
+                      <a href={t.video_url} target="_blank" rel="noreferrer"
+                        style={{ fontSize: 12, color: '#0F6E56', textDecoration: 'none', fontWeight: 500, background: '#E1F5EE', padding: '4px 10px', borderRadius: 20 }}>
+                        🎥 Why me? ↗
                       </a>
                     )}
                     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
