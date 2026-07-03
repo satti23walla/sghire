@@ -20,6 +20,7 @@ export default function Profile() {
   const [companyName, setCompanyName] = useState('')
   const [linkedinUrl, setLinkedinUrl] = useState('')
   const [introVideoUrl, setIntroVideoUrl] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState('')
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
@@ -43,6 +44,7 @@ export default function Profile() {
       setCompanyName(profile.company_name || '')
       setLinkedinUrl(profile.linkedin_url || '')
       setIntroVideoUrl(profile.intro_video_url || '')
+      setAvatarUrl(profile.avatar_url || '')
       if (profile.role === 'candidate') loadPortfolio()
     }
   }, [profile?.id])
@@ -88,6 +90,7 @@ export default function Profile() {
         p_company_name: companyName || null,
         p_linkedin_url: linkedinUrl || null,
         p_intro_video_url: introVideoUrl || null,
+        p_avatar_url: avatarUrl || null,
       })
 
       if (err) {
@@ -198,12 +201,30 @@ export default function Profile() {
                   placeholder="https://linkedin.com/in/yourname"
                   value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} />
               </div>
-              <div style={{ marginBottom: 20 }}>
+              <div style={{ marginBottom: 14 }}>
                 <label className="form-label">Intro video URL <span style={{ color: '#888', fontWeight: 400 }}>(Loom, YouTube, Google Drive)</span></label>
                 <input className="form-input" type="url"
                   placeholder="https://loom.com/share/..."
                   value={introVideoUrl} onChange={e => setIntroVideoUrl(e.target.value)} />
                 <p style={{ fontSize: 11, color: '#888', marginTop: 4 }}>A 1–2 min video introducing yourself. Shows on your profile for all applications.</p>
+              </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <label className="form-label">Profile photo URL <span style={{ color: '#888', fontWeight: 400 }}>(optional)</span></label>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Preview"
+                      style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1.5px solid #e0e0dc' }} />
+                  ) : (
+                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#EEEDFE', color: '#534AB7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
+                      {profile.full_name ? profile.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '?'}
+                    </div>
+                  )}
+                  <input className="form-input" type="url"
+                    placeholder="https://... (paste a direct image URL)"
+                    value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} />
+                </div>
+                <p style={{ fontSize: 11, color: '#888', marginTop: 4 }}>Tip: right-click your LinkedIn photo → Copy image address, then paste it here.</p>
               </div>
             </>
           )}

@@ -7,6 +7,7 @@ import EmployerDashboard from './pages/EmployerDashboard'
 import Jobs from './pages/Jobs'
 import JobDetail from './pages/JobDetail'
 import Profile from './pages/Profile'
+import CandidateProfileView from './pages/CandidateProfileView'
 import { useAuth } from './contexts/AuthContext'
 
 function ProtectedRoute({ children, requiredRole }) {
@@ -51,6 +52,11 @@ export default function App() {
           <Route path="/profile" element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/candidate/:id" element={
+            <ProtectedRoute>
+              <CandidateProfileView />
             </ProtectedRoute>
           } />
         </Routes>

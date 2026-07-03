@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 
@@ -49,7 +49,7 @@ export default function EmployerDashboard() {
       .from('applications')
       .select(`
         *,
-        profiles!candidate_id (full_name, headline, location, skills, linkedin_url, intro_video_url),
+        profiles!candidate_id (full_name, headline, location, skills, linkedin_url, intro_video_url, avatar_url),
         video_responses (id, type, video_url),
         projects (id, title, description, project_url)
       `)
@@ -274,12 +274,23 @@ export default function EmployerDashboard() {
                   return (
                     <div key={app.id} className="card" style={{ marginBottom: 12 }}>
                       <div style={{ display: 'flex', gap: 12, marginBottom: 10 }}>
-                        <div className="avatar" style={{ background: '#EEEDFE', color: '#534AB7', fontSize: 13, fontWeight: 600 }}>
-                          {appInitials}
-                        </div>
+                        {app.profiles?.avatar_url ? (
+                          <img src={app.profiles.avatar_url} alt={app.profiles.full_name}
+                            style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1.5px solid #e0e0dc' }} />
+                        ) : (
+                          <div className="avatar" style={{ background: '#EEEDFE', color: '#534AB7', fontSize: 13, fontWeight: 600 }}>
+                            {appInitials}
+                          </div>
+                        )}
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontWeight: 500, fontSize: 14 }}>{app.profiles?.full_name}</p>
-                          <p style={{ fontSize: 12, color: '#666', marginTop: 2 }}>{app.profiles?.headline}</p>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                            <p style={{ fontWeight: 500, fontSize: 14 }}>{app.profiles?.full_name}</p>
+                            <Link to={`/candidate/${app.candidate_id}`}
+                              style={{ fontSize: 11, color: '#1D9E75', textDecoration: 'none', fontWeight: 500 }}>
+                              View profile ↗
+                            </Link>
+                          </div>
+                          <p style={{ fontSize: 12, color: '#666', marginTop: 1 }}>{app.profiles?.headline}</p>
                           {app.profiles?.location && <p style={{ fontSize: 11, color: '#888', marginTop: 1 }}>📍 {app.profiles.location}</p>}
                         </div>
                         <span className="badge" style={{ background: sc.bg, color: sc.tc, flexShrink: 0, alignSelf: 'flex-start' }}>{app.status}</span>
