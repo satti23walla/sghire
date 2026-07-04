@@ -275,7 +275,7 @@ export default function EmployerDashboard() {
                     <div key={app.id} className="card" style={{ marginBottom: 12 }}>
                       <div style={{ display: 'flex', gap: 12, marginBottom: 10 }}>
                         {app.profiles?.avatar_url ? (
-                          <img src={app.profiles.avatar_url} alt={app.profiles.full_name}
+                          <img src={app.profiles.avatar_url + '?v=1'} alt={app.profiles.full_name}
                             style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1.5px solid #e0e0dc' }} />
                         ) : (
                           <div className="avatar" style={{ background: '#EEEDFE', color: '#534AB7', fontSize: 13, fontWeight: 600 }}>

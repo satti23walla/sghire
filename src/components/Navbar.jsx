@@ -45,7 +45,7 @@ export default function Navbar() {
               </Link>
               <Link to="/profile" title="Edit profile" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
                 {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt={profile.full_name}
+                  <img src={profile.avatar_url + '?v=1'} alt={profile.full_name}
                     style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', cursor: 'pointer', border: '1.5px solid #e0e0dc' }} />
                 ) : (
                   <div style={{

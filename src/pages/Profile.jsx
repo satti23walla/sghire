@@ -271,7 +271,7 @@ export default function Profile() {
                   {/* Avatar preview */}
                   <div style={{ position: 'relative', flexShrink: 0 }}>
                     {avatarUrl ? (
-                      <img src={avatarUrl} alt="Profile"
+                      <img src={avatarUrl.startsWith('http') ? avatarUrl + '?v=1' : avatarUrl} alt="Profile"
                         style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid #e0e0dc' }} />
                     ) : (
                       <div style={{

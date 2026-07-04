@@ -183,7 +183,7 @@ export default function CandidateDashboard() {
           <div className="card">
             <div style={{ display: 'flex', gap: 12, marginBottom: skillList.length > 0 ? 14 : 0 }}>
               {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt={profile.full_name}
+                <img src={profile.avatar_url + '?v=1'} alt={profile.full_name}
                   style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1.5px solid #e0e0dc' }} />
               ) : (
                 <div className="avatar" style={{ background: '#EEEDFE', color: '#534AB7', fontSize: 16, fontWeight: 600 }}>

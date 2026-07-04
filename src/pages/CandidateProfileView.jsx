@@ -59,7 +59,7 @@ export default function CandidateProfileView() {
         <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', marginBottom: skillList.length > 0 ? 14 : 0 }}>
           {/* Avatar */}
           {candidate.avatar_url ? (
-            <img src={candidate.avatar_url} alt={candidate.full_name}
+            <img src={candidate.avatar_url + '?v=1'} alt={candidate.full_name}
               style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid #e0e0dc' }} />
           ) : (
             <div style={{
