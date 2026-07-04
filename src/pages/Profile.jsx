@@ -67,26 +67,6 @@ export default function Profile() {
     }
   }
 
-  function resizeImage(file, maxSize) {
-    return new Promise((resolve, reject) => {
-      const img = new Image()
-      const objectUrl = URL.createObjectURL(file)
-      img.onload = () => {
-        URL.revokeObjectURL(objectUrl)
-        let w = img.width, h = img.height
-        if (w > h) { if (w > maxSize) { h = Math.round(h * maxSize / w); w = maxSize } }
-        else { if (h > maxSize) { w = Math.round(w * maxSize / h); h = maxSize } }
-        const canvas = document.createElement('canvas')
-        canvas.width = w
-        canvas.height = h
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h)
-        resolve(canvas.toDataURL('image/jpeg', 0.85))
-      }
-      img.onerror = reject
-      img.src = objectUrl
-    })
-  }
-
   async function handleAvatarUpload(e) {
     const file = e.target.files[0]
     if (!file) return
@@ -105,13 +85,24 @@ export default function Profile() {
     setAvatarError('')
 
     try {
-      // Resize to 300x300 max, convert to JPEG — stores as ~20-40KB data URL
-      const dataUrl = await resizeImage(file, 300)
-      setAvatarUrl(dataUrl)
+      const ext = file.name.split('.').pop().toLowerCase()
+      const filePath = `${profile.id}/avatar.${ext}`
+
+      const { error: uploadErr } = await supabase.storage
+        .from('Avatars')
+        .upload(filePath, file, { upsert: true, contentType: file.type })
+
+      if (uploadErr) throw uploadErr
+
+      const { data } = supabase.storage
+        .from('Avatars')
+        .getPublicUrl(filePath)
+
+      setAvatarUrl(data.publicUrl)
 
       await supabase.rpc('update_my_profile', {
         p_full_name: fullName,
-        p_avatar_url: dataUrl,
+        p_avatar_url: data.publicUrl,
       })
       await refreshProfile().catch(() => {})
     } catch (err) {
