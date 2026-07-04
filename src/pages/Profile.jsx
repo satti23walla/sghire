@@ -98,13 +98,13 @@ export default function Profile() {
         .from('Avatars')
         .getPublicUrl(filePath)
 
-      const urlWithBust = `${publicUrl}?t=${Date.now()}`
-      setAvatarUrl(urlWithBust)
+      // Store clean URL, cache-bust only for immediate display
+      setAvatarUrl(`${publicUrl}?t=${Date.now()}`)
 
-      // Save to profile immediately
+      // Save clean URL to profile
       await supabase.rpc('update_my_profile', {
         p_full_name: fullName,
-        p_avatar_url: urlWithBust,
+        p_avatar_url: publicUrl,
       })
       await refreshProfile().catch(() => {})
     } catch (err) {

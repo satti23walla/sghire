@@ -44,14 +44,19 @@ export default function Navbar() {
                 Dashboard
               </Link>
               <Link to="/profile" title="Edit profile" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-                <div style={{
-                  width: 30, height: 30, borderRadius: '50%',
-                  background: '#EEEDFE', color: '#534AB7',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 600, cursor: 'pointer'
-                }}>
-                  {initials}
-                </div>
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt={profile.full_name}
+                    style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', cursor: 'pointer', border: '1.5px solid #e0e0dc' }} />
+                ) : (
+                  <div style={{
+                    width: 30, height: 30, borderRadius: '50%',
+                    background: '#EEEDFE', color: '#534AB7',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 11, fontWeight: 600, cursor: 'pointer'
+                  }}>
+                    {initials}
+                  </div>
+                )}
               </Link>
               <button onClick={handleSignOut} className="btn btn-outline" style={{ fontSize: 12, padding: '5px 12px' }}>
                 Sign out
