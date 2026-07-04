@@ -94,12 +94,12 @@ export default function Profile() {
 
       if (uploadErr) throw uploadErr
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('Avatars')
-        .getPublicUrl(filePath)
+      // Construct URL manually — most reliable approach
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const publicUrl = `${supabaseUrl}/storage/v1/object/public/Avatars/${filePath}`
+      console.log('Avatar public URL:', publicUrl)
 
-      // Store clean URL, cache-bust only for immediate display
-      setAvatarUrl(`${publicUrl}?t=${Date.now()}`)
+      setAvatarUrl(publicUrl)
 
       // Save clean URL to profile
       await supabase.rpc('update_my_profile', {
