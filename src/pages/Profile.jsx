@@ -21,6 +21,8 @@ export default function Profile() {
   const [linkedinUrl, setLinkedinUrl] = useState('')
   const [introVideoUrl, setIntroVideoUrl] = useState('')
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [avatarError, setAvatarError] = useState('')
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
@@ -63,6 +65,62 @@ export default function Profile() {
     } finally {
       setLoadingPortfolio(false)
     }
+  }
+
+  async function handleAvatarUpload(e) {
+    const file = e.target.files[0]
+    if (!file) return
+
+    const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
+    if (!allowed.includes(file.type)) {
+      setAvatarError('Please upload a JPEG, PNG, WebP, or GIF image')
+      return
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setAvatarError('Image must be under 3MB')
+      return
+    }
+
+    setUploadingAvatar(true)
+    setAvatarError('')
+
+    try {
+      const ext = file.name.split('.').pop().toLowerCase()
+      const filePath = `${profile.id}/avatar.${ext}`
+
+      const { error: uploadErr } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true, contentType: file.type })
+
+      if (uploadErr) throw uploadErr
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath)
+
+      const urlWithBust = `${publicUrl}?t=${Date.now()}`
+      setAvatarUrl(urlWithBust)
+
+      // Save to profile immediately
+      await supabase.rpc('update_my_profile', {
+        p_full_name: fullName,
+        p_avatar_url: urlWithBust,
+      })
+      await refreshProfile().catch(() => {})
+    } catch (err) {
+      setAvatarError(err.message || 'Upload failed')
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
+
+  async function handleRemoveAvatar() {
+    setAvatarUrl('')
+    await supabase.rpc('update_my_profile', {
+      p_full_name: fullName,
+      p_avatar_url: null,
+    })
+    await refreshProfile().catch(() => {})
   }
 
   async function handleSave(e) {
@@ -210,21 +268,63 @@ export default function Profile() {
               </div>
 
               <div style={{ marginBottom: 20 }}>
-                <label className="form-label">Profile photo URL <span style={{ color: '#888', fontWeight: 400 }}>(optional)</span></label>
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="Preview"
-                      style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1.5px solid #e0e0dc' }} />
-                  ) : (
-                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#EEEDFE', color: '#534AB7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
-                      {profile.full_name ? profile.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '?'}
+                <label className="form-label">Profile photo</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 6 }}>
+                  {/* Avatar preview */}
+                  <div style={{ position: 'relative', flexShrink: 0 }}>
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Profile"
+                        style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid #e0e0dc' }} />
+                    ) : (
+                      <div style={{
+                        width: 64, height: 64, borderRadius: '50%',
+                        background: '#EEEDFE', color: '#534AB7',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 20, fontWeight: 600
+                      }}>
+                        {profile.full_name ? profile.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '?'}
+                      </div>
+                    )}
+                    {uploadingAvatar && (
+                      <div style={{
+                        position: 'absolute', inset: 0, borderRadius: '50%',
+                        background: 'rgba(0,0,0,0.4)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}>
+                        <span style={{ color: '#fff', fontSize: 11 }}>...</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upload controls */}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+                      <label style={{
+                        padding: '6px 14px', borderRadius: 8, fontSize: 13,
+                        border: '1px solid #e0e0dc', background: '#fff',
+                        cursor: uploadingAvatar ? 'not-allowed' : 'pointer',
+                        color: uploadingAvatar ? '#aaa' : '#444', fontWeight: 500
+                      }}>
+                        {uploadingAvatar ? 'Uploading...' : '📷 Upload photo'}
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                          style={{ display: 'none' }}
+                          disabled={uploadingAvatar}
+                          onChange={handleAvatarUpload}
+                        />
+                      </label>
+                      {avatarUrl && (
+                        <button type="button" onClick={handleRemoveAvatar}
+                          style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, border: '1px solid #FAECE7', background: '#FAECE7', color: '#D85A30', cursor: 'pointer' }}>
+                          Remove
+                        </button>
+                      )}
                     </div>
-                  )}
-                  <input className="form-input" type="url"
-                    placeholder="https://... (paste a direct image URL)"
-                    value={avatarUrl} onChange={e => setAvatarUrl(e.target.value)} />
+                    <p style={{ fontSize: 11, color: '#888' }}>JPEG, PNG, WebP or GIF · Max 3MB</p>
+                    {avatarError && <p style={{ fontSize: 12, color: '#D85A30', marginTop: 4 }}>{avatarError}</p>}
+                  </div>
                 </div>
-                <p style={{ fontSize: 11, color: '#888', marginTop: 4 }}>Tip: right-click your LinkedIn photo → Copy image address, then paste it here.</p>
               </div>
             </>
           )}
