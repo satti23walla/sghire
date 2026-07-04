@@ -6,6 +6,7 @@ export default function Navbar() {
   const { pathname } = useLocation()
   const { user, profile, signOut } = useAuth()
   const { unread } = useNotifications()
+  // unread defaults to 0 safely even if table doesn't exist yet
   const navigate = useNavigate()
 
   function handleSignOut() {

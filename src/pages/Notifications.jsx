@@ -3,10 +3,9 @@ import { useNotifications } from '../hooks/useNotifications'
 import { useAuth } from '../contexts/AuthContext'
 
 const typeIcons = {
-  profile_viewed:        { icon: '👁️', color: '#534AB7', bg: '#EEEDFE' },
-  application_received:  { icon: '📨', color: '#0F6E56', bg: '#E1F5EE' },
-  status_changed:        { icon: '🔔', color: '#BA7517', bg: '#FAEEDA' },
-  new_application:       { icon: '✉️', color: '#0F6E56', bg: '#E1F5EE' },
+  profile_viewed:       { icon: '👁️', color: '#534AB7', bg: '#EEEDFE' },
+  application_received: { icon: '📨', color: '#0F6E56', bg: '#E1F5EE' },
+  status_changed:       { icon: '🔔', color: '#BA7517', bg: '#FAEEDA' },
 }
 
 function timeAgo(dateStr) {
@@ -21,13 +20,45 @@ function timeAgo(dateStr) {
 }
 
 export default function Notifications() {
-  const { notifications, unread, loading, markAllRead, markRead } = useNotifications()
+  const { notifications, unread, loading, error, markAllRead, markRead } = useNotifications()
   const { profile } = useAuth()
   const navigate = useNavigate()
 
   function handleClick(notif) {
     if (!notif.read) markRead(notif.id)
     if (notif.link) navigate(notif.link)
+  }
+
+  // Show setup instructions if table doesn't exist yet
+  if (error && error.includes('relation') || error && error.includes('does not exist')) {
+    return (
+      <div>
+        <h2 style={{ fontSize: 18, fontWeight: 500, marginBottom: 20 }}>Notifications</h2>
+        <div className="card" style={{ background: '#FAEEDA', border: 'none' }}>
+          <p style={{ fontWeight: 500, fontSize: 14, marginBottom: 8, color: '#BA7517' }}>⚠️ Setup required</p>
+          <p style={{ fontSize: 13, color: '#666', lineHeight: 1.7 }}>
+            Run this SQL in Supabase → SQL Editor to enable notifications:
+          </p>
+          <pre style={{ background: '#fff', padding: 12, borderRadius: 8, fontSize: 11, marginTop: 10, overflow: 'auto', color: '#333' }}>{`CREATE TABLE notifications (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  body TEXT,
+  link TEXT,
+  read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own notifications"
+  ON notifications FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can update own notifications"
+  ON notifications FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Authenticated users can create notifications"
+  ON notifications FOR INSERT WITH CHECK (auth.role() = 'authenticated');`}</pre>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -46,33 +77,33 @@ export default function Notifications() {
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 40, color: '#aaa', fontSize: 13 }}>Loading...</div>
+      ) : error ? (
+        <div className="card" style={{ background: '#FAECE7', border: 'none' }}>
+          <p style={{ color: '#D85A30', fontSize: 13 }}>Error: {error}</p>
+        </div>
       ) : notifications.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: 48, background: '#f9f9f7', border: 'none' }}>
           <p style={{ fontSize: 32, marginBottom: 10 }}>🔔</p>
           <p style={{ fontWeight: 500, fontSize: 15, marginBottom: 6 }}>No notifications yet</p>
           <p style={{ color: '#666', fontSize: 13 }}>
             {profile?.role === 'candidate'
-              ? 'You\'ll be notified when employers view your profile or update your application.'
-              : 'You\'ll be notified when candidates apply to your roles.'}
+              ? "You'll be notified when employers view your profile or update your application."
+              : "You'll be notified when candidates apply to your roles."}
           </p>
         </div>
       ) : (
         notifications.map(n => {
           const t = typeIcons[n.type] || { icon: '🔔', color: '#666', bg: '#f4f4f2' }
           return (
-            <div key={n.id}
-              onClick={() => handleClick(n)}
-              className="card"
+            <div key={n.id} onClick={() => handleClick(n)} className="card"
               style={{
-                marginBottom: 8, cursor: n.link ? 'pointer' : 'default',
+                marginBottom: 8,
+                cursor: n.link ? 'pointer' : 'default',
                 background: n.read ? '#fff' : '#fafffe',
                 borderLeft: n.read ? undefined : '3px solid #1D9E75',
               }}>
               <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-                  background: t.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16
-                }}>
+                <div style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0, background: t.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>
                   {t.icon}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
