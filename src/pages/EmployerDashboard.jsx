@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import { notify } from '../lib/notifications'
 
 const statusColors = {
   submitted:   { bg: '#E1F5EE', tc: '#0F6E56' },
@@ -91,6 +92,24 @@ export default function EmployerDashboard() {
 
   async function updateStatus(appId, status) {
     await supabase.from('applications').update({ status }).eq('id', appId)
+
+    // Notify candidate of status change
+    const app = applications.find(a => a.id === appId)
+    if (app) {
+      const statusMessages = {
+        reviewed:    'Your application is being reviewed',
+        shortlisted: '🎉 You\'ve been shortlisted!',
+        rejected:    'Your application was not progressed',
+      }
+      notify({
+        userId: app.candidate_id,
+        type: 'status_changed',
+        title: `Application update: ${selectedJob?.title}`,
+        body: statusMessages[status] || `Status updated to ${status}`,
+        link: '/candidate',
+      }).catch(() => {})
+    }
+
     if (selectedJob) await loadApplications(selectedJob.id)
   }
 

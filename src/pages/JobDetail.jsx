@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { notify } from '../lib/notifications'
 
 const typeColors = {
   'full-time':  { bg: '#E1F5EE', tc: '#0F6E56' },
@@ -76,6 +77,15 @@ export default function JobDetail() {
       setSuccess(true)
       setHasApplied(true)
       setShowForm(false)
+
+      // Notify employer of new application
+      notify({
+        userId: job.employer_id,
+        type: 'application_received',
+        title: `New application for ${job.title}`,
+        body: `${profile?.full_name || 'A candidate'} applied to your role.`,
+        link: '/employer',
+      }).catch(() => {})
     } catch (err) {
       setError(err.message)
     } finally {

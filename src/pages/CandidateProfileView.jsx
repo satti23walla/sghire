@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import { notify } from '../lib/notifications'
 
 const typeIcons = { project: '💼', website: '🌐', video: '🎥', article: '📝', other: '🔗' }
 
@@ -33,6 +34,17 @@ export default function CandidateProfileView() {
         .eq('candidate_id', id)
         .order('created_at', { ascending: false })
       setPortfolio(port || [])
+
+      // Notify candidate their profile was viewed (only if viewer is employer)
+      if (myProfile?.role === 'employer' && myProfile.id !== id) {
+        notify({
+          userId: id,
+          type: 'profile_viewed',
+          title: `${myProfile.company_name || 'An employer'} viewed your profile`,
+          body: 'Your profile is getting attention!',
+          link: '/candidate',
+        }).catch(() => {})
+      }
     }
     setLoading(false)
   }
