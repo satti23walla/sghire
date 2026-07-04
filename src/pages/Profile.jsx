@@ -89,13 +89,13 @@ export default function Profile() {
       const filePath = `${profile.id}/avatar.${ext}`
 
       const { error: uploadErr } = await supabase.storage
-        .from('avatars')
+        .from('Avatars')
         .upload(filePath, file, { upsert: true, contentType: file.type })
 
       if (uploadErr) throw uploadErr
 
       const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
+        .from('Avatars')
         .getPublicUrl(filePath)
 
       const urlWithBust = `${publicUrl}?t=${Date.now()}`
