@@ -78,14 +78,18 @@ export default function JobDetail() {
       setHasApplied(true)
       setShowForm(false)
 
-      // Notify employer of new application
-      notify({
-        userId: job.employer_id,
-        type: 'application_received',
-        title: `New application for ${job.title}`,
-        body: `${profile?.full_name || 'A candidate'} applied to your role.`,
-        link: '/employer',
-      }).catch(() => {})
+      // Notify employer of new application (fetch their email first)
+      supabase.from('profiles').select('email').eq('id', job.employer_id).single()
+        .then(({ data: emp }) => {
+          notify({
+            userId: job.employer_id,
+            type: 'application_received',
+            title: `New application for ${job.title}`,
+            body: `${profile?.full_name || 'A candidate'} applied to your role.`,
+            link: '/employer',
+            recipientEmail: emp?.email,
+          })
+        }).catch(() => {})
     } catch (err) {
       setError(err.message)
     } finally {

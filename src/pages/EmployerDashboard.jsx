@@ -50,7 +50,7 @@ export default function EmployerDashboard() {
       .from('applications')
       .select(`
         *,
-        profiles!candidate_id (full_name, headline, location, skills, linkedin_url, intro_video_url, avatar_url),
+        profiles!candidate_id (full_name, headline, location, skills, linkedin_url, intro_video_url, avatar_url, email),
         video_responses (id, type, video_url),
         projects (id, title, description, project_url)
       `)
@@ -107,6 +107,7 @@ export default function EmployerDashboard() {
         title: `Application update: ${selectedJob?.title}`,
         body: statusMessages[status] || `Status updated to ${status}`,
         link: '/candidate',
+        recipientEmail: app.profiles?.email,
       }).catch(() => {})
     }
 

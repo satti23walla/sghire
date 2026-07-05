@@ -43,6 +43,7 @@ export default function CandidateProfileView() {
           title: `${myProfile.company_name || 'An employer'} viewed your profile`,
           body: 'Your profile is getting attention!',
           link: '/candidate',
+          recipientEmail: prof.email,
         }).catch(() => {})
       }
     }
