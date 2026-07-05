@@ -40,7 +40,7 @@ export default function Landing() {
         </div>
         <h1 style={{ fontSize: 28, fontWeight: 500, lineHeight: 1.3, marginBottom: 12 }}>Hire the person,<br />not the résumé.</h1>
         <p style={{ color: '#666', maxWidth: 460, margin: '0 auto 24px', lineHeight: 1.7, fontSize: 14 }}>
-          Let's make hiring human. Video-first pre-screening for SG candidates and hiring managers — see real people, real expectations, before you commit to an interview.
+          Hiring is all about real connection, the real you. Video-first pre-screening for candidates and hiring managers. Real people, real expectations, the real deal.
         </p>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button className="btn btn-primary" onClick={handleCandidate}>
