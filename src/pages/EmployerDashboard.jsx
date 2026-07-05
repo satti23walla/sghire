@@ -50,7 +50,7 @@ export default function EmployerDashboard() {
       .from('applications')
       .select(`
         *,
-        profiles!candidate_id (full_name, headline, location, skills, linkedin_url, intro_video_url, avatar_url, email),
+        profiles!candidate_id (full_name, headline, location, skills, linkedin_url, intro_video_url, avatar_url, email, video_visibility),
         video_responses (id, type, video_url),
         projects (id, title, description, project_url)
       `)
@@ -376,6 +376,14 @@ export default function EmployerDashboard() {
                             style={{ fontSize: 12, color: '#0F6E56', textDecoration: 'none', background: '#E1F5EE', padding: '4px 10px', borderRadius: 20, fontWeight: 500 }}>
                             🎥 Intro video ↗
                           </a>
+                        )}
+                        {app.profiles?.intro_video_url && ['public', 'applications'].includes(app.profiles?.video_visibility) && (
+                          <div key="intro" style={{ marginBottom: 6 }}>
+                            <a href={app.profiles.intro_video_url} target="_blank" rel="noreferrer"
+                              style={{ fontSize: 13, color: '#1D9E75', textDecoration: 'none' }}>
+                              🎥 Watch candidate intro video ↗
+                            </a>
+                          </div>
                         )}
                         {app.video_responses?.map(v => (
                           <a key={v.id} href={v.video_url} target="_blank" rel="noreferrer"

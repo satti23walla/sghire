@@ -20,6 +20,7 @@ export default function Profile() {
   const [companyName, setCompanyName] = useState('')
   const [linkedinUrl, setLinkedinUrl] = useState('')
   const [introVideoUrl, setIntroVideoUrl] = useState('')
+  const [videoVisibility, setVideoVisibility] = useState('applications')
   const [avatarUrl, setAvatarUrl] = useState('')
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [avatarError, setAvatarError] = useState('')
@@ -46,6 +47,7 @@ export default function Profile() {
       setCompanyName(profile.company_name || '')
       setLinkedinUrl(profile.linkedin_url || '')
       setIntroVideoUrl(profile.intro_video_url || '')
+      setVideoVisibility(profile.video_visibility || 'applications')
       setAvatarUrl(profile.avatar_url || '')
       if (profile.role === 'candidate') loadPortfolio()
     }
@@ -146,6 +148,7 @@ export default function Profile() {
         p_company_name: companyName || null,
         p_linkedin_url: linkedinUrl || null,
         p_intro_video_url: introVideoUrl || null,
+        p_video_visibility: videoVisibility,
         p_avatar_url: avatarUrl || null,
       })
 
@@ -257,12 +260,43 @@ export default function Profile() {
                   placeholder="https://linkedin.com/in/yourname"
                   value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} />
               </div>
-              <div style={{ marginBottom: 14 }}>
-                <label className="form-label">Intro video URL <span style={{ color: '#888', fontWeight: 400 }}>(Loom, YouTube, Google Drive)</span></label>
+              <div style={{ marginBottom: 20 }}>
+                <label className="form-label">
+                  {profile.role === 'candidate' ? '🎥 Intro video — who you are' : '🎥 Meet your hiring manager video'}
+                  <span style={{ color: '#888', fontWeight: 400 }}> (Loom, YouTube, Google Drive)</span>
+                </label>
                 <input className="form-input" type="url"
                   placeholder="https://loom.com/share/..."
                   value={introVideoUrl} onChange={e => setIntroVideoUrl(e.target.value)} />
-                <p style={{ fontSize: 11, color: '#888', marginTop: 4 }}>A 1–2 min video introducing yourself. Shows on your profile for all applications.</p>
+                <p style={{ fontSize: 11, color: '#888', marginTop: 4 }}>
+                  {profile.role === 'candidate'
+                    ? 'A 1–2 min video: who you are, what you do, what you\'re looking for.'
+                    : 'A 1–2 min video: who you are, your team, what makes your company a great place to work.'}
+                </p>
+
+                {/* Visibility control */}
+                {introVideoUrl && (
+                  <div style={{ marginTop: 10 }}>
+                    <label className="form-label">Who can see this video?</label>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
+                      {[
+                        { key: 'public', icon: '🌐', label: 'Public', sub: 'Anyone on the platform' },
+                        { key: 'applications', icon: '📨', label: profile.role === 'candidate' ? 'With applications' : 'On job posts', sub: profile.role === 'candidate' ? 'Only employers you apply to' : 'Shown on your job listings' },
+                        { key: 'private', icon: '🔒', label: 'Private', sub: 'Saved but not shown' },
+                      ].map(v => (
+                        <button key={v.key} type="button" onClick={() => setVideoVisibility(v.key)}
+                          style={{
+                            flex: 1, minWidth: 100, padding: '8px 10px', borderRadius: 8, cursor: 'pointer', textAlign: 'left',
+                            border: `1.5px solid ${videoVisibility === v.key ? '#1D9E75' : '#e0e0dc'}`,
+                            background: videoVisibility === v.key ? '#E1F5EE' : '#fff',
+                          }}>
+                          <p style={{ fontSize: 13, fontWeight: 500, color: videoVisibility === v.key ? '#0F6E56' : '#444' }}>{v.icon} {v.label}</p>
+                          <p style={{ fontSize: 10, color: '#888', marginTop: 2 }}>{v.sub}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div style={{ marginBottom: 20 }}>

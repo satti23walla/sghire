@@ -29,7 +29,7 @@ export default function JobDetail() {
   const [responseVideo, setResponseVideo] = useState('')
 
   useEffect(() => {
-    supabase.from('jobs').select('*').eq('id', id).single()
+    supabase.from('jobs').select('*, profiles!employer_id(full_name, company_name, intro_video_url, video_visibility, avatar_url)').eq('id', id).single()
       .then(({ data }) => { setJob(data); setLoading(false) })
   }, [id])
 
@@ -122,6 +122,28 @@ export default function JobDetail() {
         {job.location && <p style={{ fontSize: 13, color: '#888', marginBottom: 10 }}>📍 {job.location}</p>}
         {job.description && <p style={{ fontSize: 14, color: '#555', lineHeight: 1.7 }}>{job.description}</p>}
       </div>
+
+      {/* Employer intro video */}
+      {job.profiles?.intro_video_url && ['public', 'applications'].includes(job.profiles?.video_visibility) && (
+        <div className="card" style={{ marginBottom: 12, background: '#EEEDFE', border: 'none' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {job.profiles?.avatar_url ? (
+              <img src={job.profiles.avatar_url + '?v=1'} alt=""
+                style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '2px solid #fff', flexShrink: 0 }} />
+            ) : (
+              <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#534AB7', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>🏢</div>
+            )}
+            <div style={{ flex: 1 }}>
+              <p style={{ fontWeight: 500, fontSize: 13, color: '#534AB7', margin: 0 }}>Meet the hiring manager</p>
+              <p style={{ fontSize: 12, color: '#534AB7', opacity: 0.8 }}>{job.profiles?.full_name || job.company_name}</p>
+            </div>
+            <a href={job.profiles.intro_video_url} target="_blank" rel="noreferrer"
+              style={{ fontSize: 12, color: '#534AB7', textDecoration: 'none', fontWeight: 600, background: '#fff', padding: '6px 12px', borderRadius: 20 }}>
+              🎥 Watch ↗
+            </a>
+          </div>
+        </div>
+      )}
 
       {job.requirements && (
         <div className="card" style={{ marginBottom: 12 }}>

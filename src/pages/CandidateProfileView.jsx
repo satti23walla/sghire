@@ -124,8 +124,8 @@ export default function CandidateProfileView() {
         )}
       </div>
 
-      {/* Intro video */}
-      {candidate.intro_video_url && (
+      {/* Intro video - respect visibility */}
+      {candidate.intro_video_url && candidate.video_visibility === 'public' && (
         <div className="card" style={{ marginBottom: 12, background: '#E1F5EE', border: 'none' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div className="play-btn" style={{ background: '#1D9E75', flexShrink: 0 }}>
