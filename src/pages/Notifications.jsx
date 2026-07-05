@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { useNotifications } from '../hooks/useNotifications'
+import { useNotifications } from '../contexts/NotificationContext'
 import { useAuth } from '../contexts/AuthContext'
 
 const typeIcons = {

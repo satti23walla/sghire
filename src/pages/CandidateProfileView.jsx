@@ -37,14 +37,31 @@ export default function CandidateProfileView() {
 
       // Notify candidate their profile was viewed (only if viewer is employer)
       if (myProfile?.role === 'employer' && myProfile.id !== id) {
-        notify({
-          userId: id,
-          type: 'profile_viewed',
-          title: `${myProfile.company_name || 'An employer'} viewed your profile`,
-          body: 'Your profile is getting attention!',
-          link: '/candidate',
-          recipientEmail: prof.email,
-        }).catch(() => {})
+        // Try to find which job this employer is currently hiring for
+        supabase.from('jobs')
+          .select('title')
+          .eq('employer_id', myProfile.id)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+          .then(({ data: job }) => {
+            notify({
+              userId: id,
+              type: 'profile_viewed',
+              title: `${myProfile.company_name || 'An employer'} viewed your profile`,
+              body: job ? `They are hiring for: ${job.title}` : 'Your profile is getting attention!',
+              link: '/candidate',
+            })
+          }).catch(() => {
+            notify({
+              userId: id,
+              type: 'profile_viewed',
+              title: `${myProfile.company_name || 'An employer'} viewed your profile`,
+              body: 'Your profile is getting attention!',
+              link: '/candidate',
+            })
+          })
       }
     }
     setLoading(false)

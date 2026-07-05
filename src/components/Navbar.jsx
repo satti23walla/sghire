@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { useNotifications } from '../hooks/useNotifications'
+import { useNotifications } from '../contexts/NotificationContext'
 
 export default function Navbar() {
   const { pathname } = useLocation()
