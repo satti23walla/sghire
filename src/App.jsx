@@ -15,8 +15,9 @@ function ProtectedRoute({ children, requiredRole }) {
   const { user, profile, loading } = useAuth()
   if (loading) return <div style={{ padding: 60, textAlign: 'center', color: '#666' }}>Loading...</div>
   if (!user) return <Navigate to="/auth" replace />
-  if (requiredRole && profile?.role !== requiredRole) {
-    return <Navigate to={profile?.role === 'employer' ? '/employer' : '/candidate'} replace />
+  if (!profile) return <div style={{ padding: 60, textAlign: 'center', color: '#666' }}>Setting up your account...</div>
+  if (requiredRole && profile.role !== requiredRole) {
+    return <Navigate to={profile.role === 'employer' ? '/employer' : '/candidate'} replace />
   }
   return children
 }

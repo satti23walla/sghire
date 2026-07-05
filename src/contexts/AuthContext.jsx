@@ -59,6 +59,8 @@ export function AuthProvider({ children }) {
         company_name: role === 'employer' ? companyName : null,
       })
       if (profileError) throw profileError
+      // Fetch profile immediately after INSERT so it's ready before navigation
+      await fetchProfile(data.user.id)
     }
     return data
   }
