@@ -36,11 +36,11 @@ export default function Landing() {
       <div style={{ textAlign: 'center', padding: '36px 0 28px' }}>
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#E1F5EE', borderRadius: 20, padding: '4px 14px', marginBottom: 16 }}>
           <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#1D9E75' }} />
-          <span style={{ fontSize: 12, color: '#0F6E56', fontWeight: 500 }}>Singapore's hiring transparency platform</span>
+          <span style={{ fontSize: 12, color: '#0F6E56', fontWeight: 500 }}>Making hiring human · Singapore</span>
         </div>
-        <h1 style={{ fontSize: 28, fontWeight: 500, lineHeight: 1.3, marginBottom: 12 }}>Hire smarter.<br />No more guessing games.</h1>
+        <h1 style={{ fontSize: 28, fontWeight: 500, lineHeight: 1.3, marginBottom: 12 }}>Hire the person,<br />not the résumé.</h1>
         <p style={{ color: '#666', maxWidth: 460, margin: '0 auto 24px', lineHeight: 1.7, fontSize: 14 }}>
-          Video-first pre-screening for SG candidates and hiring managers. See real expectations, real people — before you apply or interview.
+          Let's make hiring human. Video-first pre-screening for SG candidates and hiring managers — see real people, real expectations, before you commit to an interview.
         </p>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button className="btn btn-primary" onClick={handleCandidate}>
