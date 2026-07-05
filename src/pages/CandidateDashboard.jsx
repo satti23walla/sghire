@@ -180,6 +180,41 @@ export default function CandidateDashboard() {
       {/* PROFILE TAB */}
       {tab === 'profile' && (
         <div>
+          {/* First-time welcome card */}
+          {!profile.headline && !profile.skills && !profile.avatar_url && (
+            <div style={{ background: 'linear-gradient(135deg, #E1F5EE 0%, #EEEDFE 100%)', borderRadius: 14, padding: '20px', marginBottom: 16 }}>
+              <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Welcome to SG Hire Insight! 👋</p>
+              <p style={{ fontSize: 13, color: '#555', marginBottom: 16, lineHeight: 1.6 }}>
+                Set up your profile to get noticed by employers. Complete these steps to get started:
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+                {[
+                  { done: !!profile.full_name, label: 'Create your account', sub: 'Done!', link: null },
+                  { done: !!profile.headline, label: 'Add your headline & skills', sub: 'e.g. Senior Analyst · 5 years · Open to work', link: '/profile' },
+                  { done: !!profile.avatar_url, label: 'Upload a profile photo', sub: 'First impressions matter', link: '/profile' },
+                  { done: !!profile.linkedin_url, label: 'Add your LinkedIn & intro video', sub: 'Let employers know more about you', link: '/profile' },
+                  { done: portfolio.length > 0, label: 'Add a portfolio item', sub: 'Projects, websites, videos, articles', link: null, tab: 'portfolio' },
+                ].map((step, i) => (
+                  <div key={i}
+                    onClick={() => step.link ? navigate(step.link) : step.tab ? setTab(step.tab) : null}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#fff', borderRadius: 10, padding: '10px 14px', cursor: step.done ? 'default' : 'pointer', opacity: step.done ? 0.6 : 1 }}>
+                    <div style={{ width: 22, height: 22, borderRadius: '50%', border: `2px solid ${step.done ? '#1D9E75' : '#ccc'}`, background: step.done ? '#1D9E75' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      {step.done && <span style={{ color: '#fff', fontSize: 12 }}>✓</span>}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: 13, fontWeight: step.done ? 400 : 500, textDecoration: step.done ? 'line-through' : 'none', color: step.done ? '#888' : '#1a1a1a' }}>{step.label}</p>
+                      {!step.done && <p style={{ fontSize: 11, color: '#888', marginTop: 1 }}>{step.sub}</p>}
+                    </div>
+                    {!step.done && <span style={{ fontSize: 14, color: '#999' }}>→</span>}
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => navigate('/profile')}>Complete profile →</button>
+                <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => navigate('/jobs')}>Browse open jobs</button>
+              </div>
+            </div>
+          )}
           <div className="card">
             <div style={{ display: 'flex', gap: 12, marginBottom: skillList.length > 0 ? 14 : 0 }}>
               {profile.avatar_url ? (

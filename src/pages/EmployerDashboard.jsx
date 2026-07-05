@@ -144,7 +144,34 @@ export default function EmployerDashboard() {
       {/* JOBS TAB */}
       {tab === 'jobs' && (
         <div>
-          {!showCreate && (
+          {/* First-time welcome */}
+          {!loadingJobs && jobs.length === 0 && !showCreate && (
+            <div style={{ background: 'linear-gradient(135deg, #E1F5EE 0%, #EEEDFE 100%)', borderRadius: 14, padding: '20px', marginBottom: 16 }}>
+              <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 4 }}>Welcome to SG Hire Insight! 👋</p>
+              <p style={{ fontSize: 13, color: '#555', marginBottom: 16, lineHeight: 1.6 }}>
+                Singapore's video-first hiring platform. Post a role and start receiving candidate applications with video introductions and portfolio showcases.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+                {[
+                  { icon: '📋', title: 'Post a job listing', sub: 'Add title, description, requirements and a video question for candidates' },
+                  { icon: '🎥', title: 'Candidates apply with video', sub: 'Get intro videos, why-me responses and portfolio links — before any interview' },
+                  { icon: '⚡', title: 'Pre-screen in minutes', sub: 'Shortlist or reject with one click. No wasted calls.' },
+                ].map((tip, i) => (
+                  <div key={i} style={{ display: 'flex', gap: 12, background: '#fff', borderRadius: 10, padding: '10px 14px' }}>
+                    <span style={{ fontSize: 20, flexShrink: 0 }}>{tip.icon}</span>
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 500, marginBottom: 2 }}>{tip.title}</p>
+                      <p style={{ fontSize: 12, color: '#666', lineHeight: 1.5 }}>{tip.sub}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button className="btn btn-primary" style={{ width: '100%', fontSize: 15 }} onClick={() => setShowCreate(true)}>
+                + Post your first role →
+              </button>
+            </div>
+          )}
+          {!showCreate && jobs.length > 0 && (
             <button className="btn btn-primary" style={{ width: '100%', marginBottom: 16 }} onClick={() => setShowCreate(true)}>
               + Post a new role
             </button>
