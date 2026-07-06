@@ -38,8 +38,16 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/jobs" element={<Jobs />} />
-          <Route path="/jobs/:id" element={<JobDetail />} />
+          <Route path="/jobs" element={
+            <ProtectedRoute>
+              <Jobs />
+            </ProtectedRoute>
+          } />
+          <Route path="/jobs/:id" element={
+            <ProtectedRoute>
+              <JobDetail />
+            </ProtectedRoute>
+          } />
           <Route path="/dashboard" element={<DashboardRedirect />} />
           <Route path="/candidate" element={
             <ProtectedRoute requiredRole="candidate">
