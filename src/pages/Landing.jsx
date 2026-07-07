@@ -46,7 +46,7 @@ export default function Landing() {
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginBottom: 72 }}>
           <button onClick={handleCandidate}
             style={{ background: '#1D9E75', color: '#fff', padding: '13px 28px', borderRadius: 9, fontSize: 15, fontWeight: 500, cursor: 'pointer', border: 'none' }}>
-            {user && profile?.role === 'candidate' ? 'My dashboard →' : 'Show who I am'}
+            {user && profile?.role === 'candidate' ? 'My dashboard →' : 'Show the real you'}
           </button>
           <button onClick={handleHiring}
             style={{ background: '#fff', color: '#444', padding: '13px 28px', borderRadius: 9, fontSize: 15, cursor: 'pointer', border: '0.5px solid #ddd' }}>
