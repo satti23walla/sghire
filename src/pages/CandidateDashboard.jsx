@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useCountUp } from '../hooks/useCountUp'
+import OnboardingWizard from '../components/OnboardingWizard'
 import { supabase } from '../lib/supabase'
 
 const statusColors = {
@@ -35,6 +37,7 @@ export default function CandidateDashboard() {
   const [portfolio, setPortfolio] = useState([])
   const [targets, setTargets] = useState([])
   const [loadingApps, setLoadingApps] = useState(true)
+  const [showWizard, setShowWizard] = useState(false)
   const [loadingPortfolio, setLoadingPortfolio] = useState(true)
   const [loadingTargets, setLoadingTargets] = useState(true)
 
@@ -154,11 +157,36 @@ export default function CandidateDashboard() {
 
   if (!profile) return <div style={{ padding: 40, textAlign: 'center', color: '#666' }}>Loading...</div>
 
+  // Show onboarding for new users who haven't seen it
+  const isNewUser = !profile.headline && !profile.skills && !profile.avatar_url
+
   const initials = profile.full_name
     ? profile.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '?'
   const skillList = profile.skills
     ? profile.skills.split(',').map(s => s.trim()).filter(Boolean) : []
   const shortlisted = applications.filter(a => a.status === 'shortlisted').length
+
+  // Profile strength
+  const strengthItems = [
+    { done: !!profile.full_name, label: 'Full name', points: 10 },
+    { done: !!profile.headline, label: 'Headline', points: 15 },
+    { done: skillList.length > 0, label: 'Skills', points: 15 },
+    { done: !!profile.location, label: 'Location', points: 10 },
+    { done: !!profile.avatar_url, label: 'Profile photo', points: 10 },
+    { done: !!profile.linkedin_url, label: 'LinkedIn URL', points: 15 },
+    { done: !!profile.intro_video_url, label: 'Intro video', points: 20 },
+    { done: portfolio.length > 0, label: 'Portfolio item', points: 5 },
+  ]
+  const strengthScore = strengthItems.reduce((sum, i) => i.done ? sum + i.points : sum, 0)
+  const nextItem = strengthItems.find(i => !i.done)
+  const radius = 28, circumference = 2 * Math.PI * radius
+  const strokeOffset = circumference - (strengthScore / 100) * circumference
+
+  // Animated stats
+  const animApps = useCountUp(applications.length)
+  const animShortlisted = useCountUp(shortlisted)
+  const animTargets = useCountUp(targets.length)
+  const animPortfolio = useCountUp(portfolio.length)
 
   const tabs = [
     { key: 'profile', label: 'Profile' },
@@ -168,6 +196,10 @@ export default function CandidateDashboard() {
   ]
 
   return (
+    <>
+      {isNewUser && showWizard && (
+        <OnboardingWizard onComplete={() => setShowWizard(false)} />
+      )}
     <div>
       <div className="subtabs">
         {tabs.map(t => (
@@ -247,6 +279,34 @@ export default function CandidateDashboard() {
             )}
           </div>
 
+          {/* Profile strength meter */}
+          <div className="card" style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <svg width="70" height="70" style={{ transform: 'rotate(-90deg)' }}>
+                <circle cx="35" cy="35" r={radius} fill="none" stroke="#f0f0ee" strokeWidth="6" />
+                <circle cx="35" cy="35" r={radius} fill="none"
+                  stroke={strengthScore >= 80 ? '#1D9E75' : strengthScore >= 50 ? '#BA7517' : '#D85A30'}
+                  strokeWidth="6" strokeLinecap="round"
+                  strokeDasharray={circumference} strokeDashoffset={strokeOffset}
+                  style={{ transition: 'stroke-dashoffset 1s ease' }} />
+              </svg>
+              <span style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#1a1a1a' }}>
+                {strengthScore}%
+              </span>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontWeight: 500, fontSize: 14, marginBottom: 2 }}>Profile strength</p>
+              {nextItem ? (
+                <p style={{ fontSize: 12, color: '#666' }}>
+                  Add <strong>{nextItem.label}</strong> to reach {Math.min(strengthScore + nextItem.points, 100)}% →{' '}
+                  <span style={{ color: '#1D9E75', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate('/profile')}>Edit profile</span>
+                </p>
+              ) : (
+                <p style={{ fontSize: 12, color: '#1D9E75', fontWeight: 500 }}>✅ Profile complete!</p>
+              )}
+            </div>
+          </div>
+
           {profile.intro_video_url && (
             <div className="card" style={{ marginTop: 10, background: '#E1F5EE', border: 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -259,6 +319,14 @@ export default function CandidateDashboard() {
             </div>
           )}
 
+          {isNewUser && (
+            <div style={{ marginTop: 10, background: '#E1F5EE', borderRadius: 10, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <p style={{ fontSize: 13, color: '#0F6E56' }}>✨ Complete your profile with our quick setup wizard</p>
+              <button className="btn btn-primary" style={{ fontSize: 12, padding: '5px 14px', flexShrink: 0 }} onClick={() => setShowWizard(true)}>
+                Start →
+              </button>
+            </div>
+          )}
           {(!profile.headline || skillList.length === 0) && (
             <Link to="/profile" style={{ textDecoration: 'none' }}>
               <div style={{ marginTop: 10, background: '#FAEEDA', borderRadius: 10, padding: '12px 14px', fontSize: 13, color: '#BA7517', cursor: 'pointer' }}>
@@ -269,19 +337,19 @@ export default function CandidateDashboard() {
 
           <div className="stat-grid">
             <div className="stat-card">
-              <div className="stat-value" style={{ color: '#1D9E75' }}>{applications.length}</div>
+              <div className="stat-value" style={{ color: '#1D9E75' }}>{animApps}</div>
               <div className="stat-label">Applied</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value" style={{ color: '#BA7517' }}>{shortlisted}</div>
+              <div className="stat-value" style={{ color: '#BA7517' }}>{animShortlisted}</div>
               <div className="stat-label">Shortlisted</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value" style={{ color: '#534AB7' }}>{targets.length}</div>
+              <div className="stat-value" style={{ color: '#534AB7' }}>{animTargets}</div>
               <div className="stat-label">Tracking</div>
             </div>
             <div className="stat-card">
-              <div className="stat-value" style={{ color: '#0F6E56' }}>{portfolio.length}</div>
+              <div className="stat-value" style={{ color: '#0F6E56' }}>{animPortfolio}</div>
               <div className="stat-label">Portfolio</div>
             </div>
           </div>
@@ -577,5 +645,6 @@ export default function CandidateDashboard() {
         </div>
       )}
     </div>
+    </>
   )
 }

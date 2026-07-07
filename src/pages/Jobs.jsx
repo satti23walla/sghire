@@ -3,6 +3,16 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 
+function getMatchScore(profileSkills, job) {
+  if (!profileSkills) return null
+  const skills = profileSkills.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+  if (!skills.length) return null
+  const jobText = (job.title + ' ' + (job.description || '') + ' ' + (job.requirements || '')).toLowerCase()
+  const matches = skills.filter(skill => jobText.includes(skill))
+  if (!matches.length) return null
+  return Math.min(Math.round((matches.length / skills.length) * 100), 99)
+}
+
 const typeColors = {
   'full-time':  { bg: '#E1F5EE', tc: '#0F6E56' },
   'part-time':  { bg: '#EEEDFE', tc: '#534AB7' },
