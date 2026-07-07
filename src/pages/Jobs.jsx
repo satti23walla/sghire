@@ -7,10 +7,49 @@ function getMatchScore(profileSkills, job) {
   if (!profileSkills) return null
   const skills = profileSkills.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
   if (!skills.length) return null
-  const jobText = (job.title + ' ' + (job.description || '') + ' ' + (job.requirements || '')).toLowerCase()
-  const matches = skills.filter(skill => jobText.includes(skill))
-  if (!matches.length) return null
-  return Math.min(Math.round((matches.length / skills.length) * 100), 99)
+
+  const title = (job.title || '').toLowerCase()
+  const desc = (job.description || '').toLowerCase()
+  const reqs = (job.requirements || '').toLowerCase()
+
+  // Extract keywords from job (words 4+ chars, skip common words)
+  const stopWords = new Set(['with', 'have', 'will', 'must', 'good', 'able', 'work', 'team', 'role', 'year', 'strong', 'experience', 'skills', 'knowledge', 'ability', 'working'])
+  const jobWords = [...new Set([...title.split(/\W+/), ...reqs.split(/\W+/)]
+    .filter(w => w.length >= 4 && !stopWords.has(w)))]
+
+  let totalScore = 0
+  let maxScore = 0
+
+  // Direction 1: candidate skills → job text (weighted by location)
+  for (const skill of skills) {
+    maxScore += 3
+    if (title.includes(skill)) totalScore += 3        // in title = highest weight
+    else if (reqs.includes(skill)) totalScore += 2.5  // in requirements
+    else if (desc.includes(skill)) totalScore += 1.5  // in description
+    else {
+      // Partial match: skill is substring of job word or vice versa
+      const partialMatch = jobWords.some(w => w.includes(skill) || skill.includes(w))
+      if (partialMatch) totalScore += 1
+    }
+  }
+
+  // Direction 2: job keywords → candidate skills (penalise unmatched job requirements)
+  const jobSkillWords = [...title.split(/\W+/), ...reqs.split(/\W+/)]
+    .filter(w => w.length >= 4 && !stopWords.has(w))
+    .slice(0, 10) // top 10 keywords from job
+
+  let jobCoverage = 0
+  for (const jw of jobSkillWords) {
+    if (skills.some(s => s.includes(jw) || jw.includes(s))) jobCoverage++
+  }
+  const coverageBonus = jobSkillWords.length > 0
+    ? (jobCoverage / jobSkillWords.length) * 20
+    : 0
+
+  const rawScore = maxScore > 0 ? (totalScore / maxScore) * 80 + coverageBonus : 0
+  const finalScore = Math.min(Math.round(rawScore), 99)
+
+  return finalScore >= 15 ? finalScore : null // hide very low scores
 }
 
 const typeColors = {
