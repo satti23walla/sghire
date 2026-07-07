@@ -299,56 +299,33 @@ export default function Profile() {
                 )}
               </div>
 
-              <div style={{ marginBottom: 20 }}>
+            </>\n          )}\n\n          {/* Profile photo - available for both candidates and employers */}
+          <div style={{ marginBottom: 20 }}>
                 <label className="form-label">Profile photo</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 6 }}>
-                  {/* Avatar preview */}
                   <div style={{ position: 'relative', flexShrink: 0 }}>
                     {avatarUrl ? (
                       <img src={avatarUrl.startsWith('http') ? avatarUrl + '?v=1' : avatarUrl} alt="Profile"
                         style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid #e0e0dc' }} />
                     ) : (
-                      <div style={{
-                        width: 64, height: 64, borderRadius: '50%',
-                        background: '#EEEDFE', color: '#534AB7',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 20, fontWeight: 600
-                      }}>
+                      <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#EEEDFE', color: '#534AB7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 600 }}>
                         {profile.full_name ? profile.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '?'}
                       </div>
                     )}
                     {uploadingAvatar && (
-                      <div style={{
-                        position: 'absolute', inset: 0, borderRadius: '50%',
-                        background: 'rgba(0,0,0,0.4)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                      }}>
+                      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <span style={{ color: '#fff', fontSize: 11 }}>...</span>
                       </div>
                     )}
                   </div>
-
-                  {/* Upload controls */}
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
-                      <label style={{
-                        padding: '6px 14px', borderRadius: 8, fontSize: 13,
-                        border: '1px solid #e0e0dc', background: '#fff',
-                        cursor: uploadingAvatar ? 'not-allowed' : 'pointer',
-                        color: uploadingAvatar ? '#aaa' : '#444', fontWeight: 500
-                      }}>
+                      <label style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, border: '1px solid #e0e0dc', background: '#fff', cursor: uploadingAvatar ? 'not-allowed' : 'pointer', color: uploadingAvatar ? '#aaa' : '#444', fontWeight: 500 }}>
                         {uploadingAvatar ? 'Uploading...' : '📷 Upload photo'}
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-                          style={{ display: 'none' }}
-                          disabled={uploadingAvatar}
-                          onChange={handleAvatarUpload}
-                        />
+                        <input type="file" accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" style={{ display: 'none' }} disabled={uploadingAvatar} onChange={handleAvatarUpload} />
                       </label>
                       {avatarUrl && (
-                        <button type="button" onClick={handleRemoveAvatar}
-                          style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, border: '1px solid #FAECE7', background: '#FAECE7', color: '#D85A30', cursor: 'pointer' }}>
+                        <button type="button" onClick={handleRemoveAvatar} style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, border: '1px solid #FAECE7', background: '#FAECE7', color: '#D85A30', cursor: 'pointer' }}>
                           Remove
                         </button>
                       )}
@@ -358,10 +335,8 @@ export default function Profile() {
                   </div>
                 </div>
               </div>
-            </>
-          )}
 
-          {profile.role === 'employer' && <div style={{ marginBottom: 20 }} />}
+          {profile.role === 'employer' && <div style={{ marginBottom: 4 }} />}
 
           <button type="submit" className="btn btn-primary" disabled={saving}>
             {saving ? 'Saving...' : 'Save changes'}
