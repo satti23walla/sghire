@@ -4,9 +4,9 @@ import { useAuth } from '../contexts/AuthContext'
 const industries = ['Fintech', 'Tech', 'Healthcare', 'Government / Statutory', 'Consulting', 'FMCG', 'Logistics', 'Real Estate']
 
 const steps = [
-  { n: '1', title: 'Record your 2-min video', desc: 'Candidate or HM records a short intro or role overview', bg: '#E1F5EE', tc: '#0F6E56' },
+  { n: '1', title: 'Build your profile', desc: 'Add your intro, skills and a 1-min video of who you are and your professional journey', bg: '#E1F5EE', tc: '#0F6E56' },
   { n: '2', title: 'Browse & match', desc: 'See real role expectations and candidate profiles before committing', bg: '#EEEDFE', tc: '#534AB7' },
-  { n: '3', title: 'Apply with context', desc: 'Submit your intro video, job response, and project showcase', bg: '#FAEEDA', tc: '#BA7517' },
+  { n: '3', title: 'Apply with context', desc: 'Apply for roles with a 1-min video on your experience and skills, add projects and relevant context', bg: '#FAEEDA', tc: '#BA7517' },
   { n: '4', title: 'Pre-screen confidently', desc: 'Both sides save time — only connect when there is a real fit', bg: '#FAECE7', tc: '#D85A30' },
 ]
 
