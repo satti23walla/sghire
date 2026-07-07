@@ -32,7 +32,7 @@ export default function Navbar() {
           <div style={{ width: 26, height: 26, borderRadius: 7, background: '#1D9E75', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#fff' }} />
           </div>
-          <span style={{ fontWeight: 500, fontSize: 14, color: '#1a1a1a' }}>SG Hire Insight</span>
+          <span style={{ fontWeight: 500, fontSize: 14, color: '#1a1a1a' }}>Hire It Right</span>
         </Link>
 
         <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', alignItems: 'center' }}>

@@ -18,7 +18,7 @@ export async function notify({ userId, type, title, body, link, recipientEmail }
           to: recipientEmail,
           subject: title,
           html: '<p>' + title + '</p>' + (body ? '<p>' + body + '</p>' : '') +
-                (link ? '<a href="https://sghire.vercel.app' + link + '">View →</a>' : ''),
+                (link ? '<a href="https://www.hireitright.com' + link + '">View →</a>' : ''),
         },
       })
       if (fnErr) console.error('Edge function error:', fnErr.message)
