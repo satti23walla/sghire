@@ -299,7 +299,10 @@ export default function Profile() {
                 )}
               </div>
 
-            </>\n          )}\n\n          {/* Profile photo - available for both candidates and employers */}
+            </>
+          )}
+
+          {/* Profile photo - available for both candidates and employers */}
           <div style={{ marginBottom: 20 }}>
                 <label className="form-label">Profile photo</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 6 }}>
