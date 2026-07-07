@@ -115,7 +115,7 @@ export default function Landing() {
 
       {/* Steps */}
       <section style={{ padding: '52px 40px', background: '#fafafa', borderTop: '0.5px solid #efefed' }}>
-        <p style={{ textAlign: 'center', fontSize: 11, color: '#bbb', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 28 }}>How it works</p>
+        <p style={{ textAlign: 'center', fontSize: 11, color: '#1a1a1a', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 28 }}>How it works</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12, maxWidth: 620, margin: '0 auto' }}>
           {steps.map(s => (
             <div key={s.n} style={{ background: '#fff', border: '0.5px solid #e8e8e4', borderRadius: 12, padding: 20 }}>
