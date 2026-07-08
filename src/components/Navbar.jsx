@@ -1,3 +1,4 @@
+import AvatarImage from '../components/AvatarImage'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useNotifications } from '../contexts/NotificationContext'
@@ -64,8 +65,7 @@ export default function Navbar() {
               {/* Avatar */}
               <Link to="/profile" title="Edit profile" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
                 {profile?.avatar_url ? (
-                  <img src={profile.avatar_url + '?v=1'} alt={profile.full_name}
-                    style={{ width: 30, height: 30, borderRadius: '50%', objectFit: 'cover', cursor: 'pointer', border: '1.5px solid #e0e0dc' }} />
+                  <AvatarImage src={profile.avatar_url} name={profile.full_name} size={30} style={{ cursor: 'pointer' }} />
                 ) : (
                   <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#EEEDFE', color: '#534AB7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                     {initials}

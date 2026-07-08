@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import AvatarImage from '../components/AvatarImage'
 import { useAuth } from '../contexts/AuthContext'
 import { notify } from '../lib/notifications'
 

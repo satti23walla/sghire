@@ -96,15 +96,15 @@ export default function Profile() {
 
       if (uploadErr) throw uploadErr
 
-      const { data } = supabase.storage
-        .from('Avatars')
-        .getPublicUrl(filePath)
+      // Generate signed URL for immediate preview (1 hour)
+      const { data: signed } = await supabase.storage
+        .from('Avatars').createSignedUrl(filePath, 3600)
+      if (signed?.signedUrl) setAvatarUrl(signed.signedUrl)
 
-      setAvatarUrl(data.publicUrl)
-
+      // Save file PATH to profile (not URL) — signed URLs generated on display
       await supabase.rpc('update_my_profile', {
         p_full_name: fullName,
-        p_avatar_url: data.publicUrl,
+        p_avatar_url: filePath,
       })
       await refreshProfile().catch(() => {})
     } catch (err) {

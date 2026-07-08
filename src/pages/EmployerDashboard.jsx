@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import AvatarImage from '../components/AvatarImage'
 import { notify } from '../lib/notifications'
 
 const statusColors = {
@@ -321,14 +322,7 @@ export default function EmployerDashboard() {
                   return (
                     <div key={app.id} className="card" style={{ marginBottom: 12 }}>
                       <div style={{ display: 'flex', gap: 12, marginBottom: 10 }}>
-                        {app.profiles?.avatar_url ? (
-                          <img src={app.profiles.avatar_url + '?v=1'} alt={app.profiles.full_name}
-                            style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1.5px solid #e0e0dc' }} />
-                        ) : (
-                          <div className="avatar" style={{ background: '#EEEDFE', color: '#534AB7', fontSize: 13, fontWeight: 600 }}>
-                            {appInitials}
-                          </div>
-                        )}
+                        <AvatarImage src={app.profiles?.avatar_url} name={app.profiles?.full_name} size={44} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                             <p style={{ fontWeight: 500, fontSize: 14 }}>{app.profiles?.full_name}</p>

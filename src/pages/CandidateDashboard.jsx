@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useCountUp } from '../hooks/useCountUp'
 import OnboardingWizard from '../components/OnboardingWizard'
 import { supabase } from '../lib/supabase'
+import AvatarImage from '../components/AvatarImage'
 
 const statusColors = {
   submitted:    { bg: '#E1F5EE', tc: '#0F6E56' },
@@ -249,14 +250,7 @@ export default function CandidateDashboard() {
           )}
           <div className="card">
             <div style={{ display: 'flex', gap: 12, marginBottom: skillList.length > 0 ? 14 : 0 }}>
-              {profile.avatar_url ? (
-                <img src={profile.avatar_url + '?v=1'} alt={profile.full_name}
-                  style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '1.5px solid #e0e0dc' }} />
-              ) : (
-                <div className="avatar" style={{ background: '#EEEDFE', color: '#534AB7', fontSize: 16, fontWeight: 600 }}>
-                  {initials}
-                </div>
-              )}
+              <AvatarImage src={profile.avatar_url} name={profile.full_name} size={48} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontWeight: 500, fontSize: 16, marginBottom: 2 }}>{profile.full_name || 'Your Name'}</p>
                 <p style={{ fontSize: 13, color: '#666', marginBottom: 3 }}>{profile.headline || 'Add a headline'}</p>
