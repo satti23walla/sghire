@@ -13,12 +13,29 @@ export default function CandidateProfileView() {
   const [candidate, setCandidate] = useState(null)
   const [portfolio, setPortfolio] = useState([])
   const [loading, setLoading] = useState(true)
+  const [accessDenied, setAccessDenied] = useState(false)
 
   useEffect(() => {
     loadCandidate()
   }, [id])
 
   async function loadCandidate() {
+    // Level 1: employers can only view profiles of candidates who applied to their jobs
+    if (myProfile?.role === 'employer') {
+      const { data: appCheck } = await supabase
+        .from('applications')
+        .select('id, jobs!inner(employer_id)')
+        .eq('candidate_id', id)
+        .eq('jobs.employer_id', myProfile.id)
+        .limit(1)
+
+      if (!appCheck || appCheck.length === 0) {
+        setAccessDenied(true)
+        setLoading(false)
+        return
+      }
+    }
+
     const { data: prof } = await supabase
       .from('profiles')
       .select('*')
@@ -68,6 +85,26 @@ export default function CandidateProfileView() {
   }
 
   if (loading) return <div style={{ padding: 60, textAlign: 'center', color: '#666' }}>Loading...</div>
+
+  if (accessDenied) return (
+    <div>
+      <button onClick={() => navigate(-1)}
+        style={{ border: 'none', background: 'none', color: '#666', fontSize: 13, cursor: 'pointer', marginBottom: 16, padding: 0 }}>
+        ← Back
+      </button>
+      <div className="card" style={{ textAlign: 'center', padding: 48 }}>
+        <p style={{ fontSize: 32, marginBottom: 12 }}>🔒</p>
+        <p style={{ fontWeight: 500, fontSize: 16, marginBottom: 8 }}>Access restricted</p>
+        <p style={{ fontSize: 14, color: '#666', lineHeight: 1.6, maxWidth: 320, margin: '0 auto' }}>
+          You can only view profiles of candidates who have applied to your job listings.
+        </p>
+        <button className="btn btn-outline" style={{ marginTop: 20 }} onClick={() => navigate('/employer')}>
+          Go to dashboard
+        </button>
+      </div>
+    </div>
+  )
+
   if (!candidate) return <div style={{ padding: 60, textAlign: 'center', color: '#666' }}>Candidate not found.</div>
 
   const initials = candidate.full_name
