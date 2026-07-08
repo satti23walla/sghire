@@ -13,14 +13,28 @@ export default function AvatarImage({ src, name, size = 40, style = {} }) {
   useEffect(() => {
     if (!src) { setUrl(null); return }
 
-    // Legacy: already a full public https URL — use as-is
-    if (src.startsWith('http')) { setUrl(src); return }
+    // Old Supabase public URL — extract path and generate signed URL
+    if (src.includes('supabase.co/storage/v1/object/public/Avatars/')) {
+      const path = src.split('/object/public/Avatars/')[1]?.split('?')[0]
+      if (path) {
+        supabase.storage.from('Avatars').createSignedUrl(path, 3600)
+          .then(({ data }) => setUrl(data?.signedUrl || null))
+          .catch(() => setUrl(null))
+        return
+      }
+    }
 
     // New: file path — generate signed URL (1 hour expiry)
-    supabase.storage.from('Avatars')
-      .createSignedUrl(src, 3600)
-      .then(({ data }) => setUrl(data?.signedUrl || null))
-      .catch(() => setUrl(null))
+    if (!src.startsWith('http')) {
+      supabase.storage.from('Avatars')
+        .createSignedUrl(src, 3600)
+        .then(({ data }) => setUrl(data?.signedUrl || null))
+        .catch(() => setUrl(null))
+      return
+    }
+
+    // Any other https URL — use directly
+    setUrl(src)
   }, [src])
 
   const baseStyle = {
