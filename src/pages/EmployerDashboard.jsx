@@ -94,7 +94,6 @@ export default function EmployerDashboard() {
   async function updateStatus(appId, status) {
     await supabase.from('applications').update({ status }).eq('id', appId)
 
-    // Notify candidate of status change
     const app = applications.find(a => a.id === appId)
     if (app) {
       const statusMessages = {
@@ -102,14 +101,29 @@ export default function EmployerDashboard() {
         shortlisted: '🎉 You\'ve been shortlisted!',
         rejected:    'Your application was not progressed',
       }
+
+      // Get candidate email — use from loaded profile or fetch as fallback
+      let recipientEmail = app.profiles?.email
+      console.log('Candidate email from profile:', recipientEmail)
+
+      if (!recipientEmail) {
+        console.log('Email not in profile data, fetching directly...')
+        const { data: prof } = await supabase
+          .from('profiles').select('email').eq('id', app.candidate_id).single()
+        recipientEmail = prof?.email
+        console.log('Fetched email:', recipientEmail)
+      }
+
+      console.log('Sending status notification to:', recipientEmail)
       notify({
         userId: app.candidate_id,
         type: 'status_changed',
         title: `Application update: ${selectedJob?.title}`,
         body: statusMessages[status] || `Status updated to ${status}`,
         link: '/candidate',
-        recipientEmail: app.profiles?.email,
-      }).catch(() => {})
+        recipientEmail,
+      }).then(() => console.log('Notification sent'))
+        .catch(e => console.error('Notification error:', e))
     }
 
     if (selectedJob) await loadApplications(selectedJob.id)
