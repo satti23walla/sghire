@@ -18,6 +18,7 @@ export default function Profile() {
   const [location, setLocation] = useState('')
   const [skills, setSkills] = useState('')
   const [companyName, setCompanyName] = useState('')
+  const [companyUrl, setCompanyUrl] = useState('')
   const [linkedinUrl, setLinkedinUrl] = useState('')
   const [introVideoUrl, setIntroVideoUrl] = useState('')
   const [videoVisibility, setVideoVisibility] = useState('applications')
@@ -45,6 +46,7 @@ export default function Profile() {
       setLocation(profile.location || '')
       setSkills(profile.skills || '')
       setCompanyName(profile.company_name || '')
+      setCompanyUrl(profile.company_url || '')
       setLinkedinUrl(profile.linkedin_url || '')
       setIntroVideoUrl(profile.intro_video_url || '')
       setVideoVisibility(profile.video_visibility || 'applications')
@@ -135,7 +137,7 @@ export default function Profile() {
         location,
         ...(profile.role === 'candidate'
           ? { headline, skills, linkedin_url: linkedinUrl, intro_video_url: introVideoUrl }
-          : { company_name: companyName }
+          : { company_name: companyName, company_url: companyUrl }
         ),
       }
 
@@ -146,6 +148,7 @@ export default function Profile() {
         p_location: location || null,
         p_skills: skills || null,
         p_company_name: companyName || null,
+        p_company_url: companyUrl || null,
         p_linkedin_url: linkedinUrl || null,
         p_intro_video_url: introVideoUrl || null,
         p_video_visibility: videoVisibility,
@@ -241,10 +244,24 @@ export default function Profile() {
               </div>
             </>
           ) : (
-            <div style={{ marginBottom: 12 }}>
-              <label className="form-label">Company name</label>
-              <input className="form-input" type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} />
-            </div>
+            <>
+              <div style={{ marginBottom: 12 }}>
+                <label className="form-label">Company name</label>
+                <input className="form-input" type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} />
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <label className="form-label">Company website / LinkedIn company page</label>
+                <input className="form-input" type="url"
+                  placeholder="https://linkedin.com/company/yourcompany or https://yourcompany.com"
+                  value={companyUrl} onChange={e => setCompanyUrl(e.target.value)} />
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <label className="form-label">Your LinkedIn profile</label>
+                <input className="form-input" type="url"
+                  placeholder="https://linkedin.com/in/yourname"
+                  value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} />
+              </div>
+            </>
           )}
 
           <div style={{ marginBottom: 12 }}>

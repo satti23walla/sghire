@@ -29,6 +29,8 @@ export default function EmployerDashboard() {
   const [jobLocation, setJobLocation] = useState('')
   const [jobType, setJobType] = useState('full-time')
   const [jobQuestion, setJobQuestion] = useState('')
+  const [careerSiteUrl, setCareerSiteUrl] = useState('')
+  const [jobPostingUrl, setJobPostingUrl] = useState('')
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState('')
 
@@ -74,6 +76,8 @@ export default function EmployerDashboard() {
       location: jobLocation,
       job_type: jobType,
       video_question: jobQuestion || null,
+      career_site_url: careerSiteUrl || null,
+      job_posting_url: jobPostingUrl || null,
     })
     if (error) {
       setCreateError(error.message)
@@ -81,6 +85,7 @@ export default function EmployerDashboard() {
       setShowCreate(false)
       setJobTitle(''); setJobDesc(''); setJobReq('')
       setJobLocation(''); setJobQuestion('')
+      setCareerSiteUrl(''); setJobPostingUrl('')
       await loadJobs()
     }
     setCreating(false)
@@ -237,6 +242,18 @@ export default function EmployerDashboard() {
                   <label className="form-label">Video question for candidates <span style={{ color: '#888', fontWeight: 400 }}>(optional)</span></label>
                   <input className="form-input" type="text" placeholder="e.g. Walk us through a project you're most proud of"
                     value={jobQuestion} onChange={e => setJobQuestion(e.target.value)} />
+                </div>
+                <div style={{ marginBottom: 12 }}>
+                  <label className="form-label">Company career site URL <span style={{ color: '#888', fontWeight: 400 }}>(optional)</span></label>
+                  <input className="form-input" type="url" placeholder="https://careers.yourcompany.com"
+                    value={careerSiteUrl} onChange={e => setCareerSiteUrl(e.target.value)} />
+                  <p style={{ fontSize: 11, color: '#888', marginTop: 4 }}>Link to your careers page — shown to candidates on the job listing</p>
+                </div>
+                <div style={{ marginBottom: 16 }}>
+                  <label className="form-label">Job posting URL <span style={{ color: '#888', fontWeight: 400 }}>(optional)</span></label>
+                  <input className="form-input" type="url" placeholder="https://linkedin.com/jobs/... or https://glassdoor.com/..."
+                    value={jobPostingUrl} onChange={e => setJobPostingUrl(e.target.value)} />
+                  <p style={{ fontSize: 11, color: '#888', marginTop: 4 }}>Link to where this job is also posted — LinkedIn, Glassdoor, company site, etc.</p>
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
                   <button type="button" className="btn btn-outline" onClick={() => setShowCreate(false)}>Cancel</button>

@@ -29,7 +29,7 @@ export default function JobDetail() {
   const [responseVideo, setResponseVideo] = useState('')
 
   useEffect(() => {
-    supabase.from('jobs').select('*, profiles!employer_id(full_name, company_name, intro_video_url, video_visibility, avatar_url)').eq('id', id).single()
+    supabase.from('jobs').select('*, profiles!employer_id(full_name, company_name, intro_video_url, video_visibility, avatar_url, linkedin_url, company_url)').eq('id', id).single()
       .then(({ data }) => { setJob(data); setLoading(false) })
   }, [id])
 
@@ -141,6 +141,39 @@ export default function JobDetail() {
               style={{ fontSize: 12, color: '#534AB7', textDecoration: 'none', fontWeight: 600, background: '#fff', padding: '6px 12px', borderRadius: 20 }}>
               🎥 Watch ↗
             </a>
+          </div>
+        </div>
+      )}
+
+      {/* Employer links */}
+      {(job.profiles?.company_url || job.profiles?.linkedin_url || job.career_site_url || job.job_posting_url) && (
+        <div className="card" style={{ marginBottom: 12 }}>
+          <p className="section-label" style={{ marginBottom: 10 }}>Company links</p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {job.profiles?.company_url && (
+              <a href={job.profiles.company_url} target="_blank" rel="noreferrer"
+                style={{ fontSize: 13, color: '#534AB7', textDecoration: 'none', background: '#EEEDFE', padding: '5px 12px', borderRadius: 20, fontWeight: 500 }}>
+                🏢 Company profile ↗
+              </a>
+            )}
+            {job.profiles?.linkedin_url && (
+              <a href={job.profiles.linkedin_url} target="_blank" rel="noreferrer"
+                style={{ fontSize: 13, color: '#0A66C2', textDecoration: 'none', background: '#E8F0FE', padding: '5px 12px', borderRadius: 20, fontWeight: 500 }}>
+                LinkedIn ↗
+              </a>
+            )}
+            {job.career_site_url && (
+              <a href={job.career_site_url} target="_blank" rel="noreferrer"
+                style={{ fontSize: 13, color: '#0F6E56', textDecoration: 'none', background: '#E1F5EE', padding: '5px 12px', borderRadius: 20, fontWeight: 500 }}>
+                🌐 Careers page ↗
+              </a>
+            )}
+            {job.job_posting_url && (
+              <a href={job.job_posting_url} target="_blank" rel="noreferrer"
+                style={{ fontSize: 13, color: '#BA7517', textDecoration: 'none', background: '#FAEEDA', padding: '5px 12px', borderRadius: 20, fontWeight: 500 }}>
+                📋 View posting ↗
+              </a>
+            )}
           </div>
         </div>
       )}
