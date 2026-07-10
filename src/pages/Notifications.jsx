@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useNotifications } from '../contexts/NotificationContext'
 import { useAuth } from '../contexts/AuthContext'
@@ -23,6 +24,14 @@ export default function Notifications() {
   const { notifications, unread, loading, error, markAllRead, markRead } = useNotifications()
   const { profile } = useAuth()
   const navigate = useNavigate()
+
+  // Auto-mark all as read after 2 seconds on page visit
+  useEffect(() => {
+    if (!loading && unread > 0) {
+      const timer = setTimeout(() => markAllRead(), 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [loading, unread])
 
   function handleClick(notif) {
     if (!notif.read) markRead(notif.id)
