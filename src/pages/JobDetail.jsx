@@ -29,7 +29,7 @@ export default function JobDetail() {
   const [responseVideo, setResponseVideo] = useState('')
 
   useEffect(() => {
-    supabase.from('jobs').select('*, profiles!employer_id(full_name, company_name, intro_video_url, video_visibility, avatar_url, linkedin_url, company_url)').eq('id', id).single()
+    supabase.from('jobs').select('*, profiles!employer_id(full_name, company_name, intro_video_url, video_visibility, avatar_url, linkedin_url, company_url, meet_team_url)').eq('id', id).single()
       .then(({ data }) => { setJob(data); setLoading(false) })
   }, [id])
 
@@ -146,7 +146,7 @@ export default function JobDetail() {
       )}
 
       {/* Employer links */}
-      {(job.profiles?.company_url || job.profiles?.linkedin_url || job.career_site_url || job.job_posting_url) && (
+      {(job.profiles?.company_url || job.profiles?.linkedin_url || job.profiles?.meet_team_url || job.career_site_url || job.job_posting_url) && (
         <div className="card" style={{ marginBottom: 12 }}>
           <p className="section-label" style={{ marginBottom: 10 }}>Company links</p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -160,6 +160,12 @@ export default function JobDetail() {
               <a href={job.profiles.linkedin_url} target="_blank" rel="noreferrer"
                 style={{ fontSize: 13, color: '#0A66C2', textDecoration: 'none', background: '#E8F0FE', padding: '5px 12px', borderRadius: 20, fontWeight: 500 }}>
                 LinkedIn ↗
+              </a>
+            )}
+            {job.profiles?.meet_team_url && (
+              <a href={job.profiles.meet_team_url} target="_blank" rel="noreferrer"
+                style={{ fontSize: 13, color: '#0F6E56', textDecoration: 'none', background: '#E1F5EE', padding: '5px 12px', borderRadius: 20, fontWeight: 500 }}>
+                👥 Meet the team ↗
               </a>
             )}
             {job.career_site_url && (

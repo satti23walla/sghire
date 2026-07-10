@@ -19,6 +19,7 @@ export default function Profile() {
   const [skills, setSkills] = useState('')
   const [companyName, setCompanyName] = useState('')
   const [companyUrl, setCompanyUrl] = useState('')
+  const [meetTeamUrl, setMeetTeamUrl] = useState('')
   const [linkedinUrl, setLinkedinUrl] = useState('')
   const [introVideoUrl, setIntroVideoUrl] = useState('')
   const [videoVisibility, setVideoVisibility] = useState('applications')
@@ -47,6 +48,7 @@ export default function Profile() {
       setSkills(profile.skills || '')
       setCompanyName(profile.company_name || '')
       setCompanyUrl(profile.company_url || '')
+      setMeetTeamUrl(profile.meet_team_url || '')
       setLinkedinUrl(profile.linkedin_url || '')
       setIntroVideoUrl(profile.intro_video_url || '')
       setVideoVisibility(profile.video_visibility || 'applications')
@@ -137,7 +139,7 @@ export default function Profile() {
         location,
         ...(profile.role === 'candidate'
           ? { headline, skills, linkedin_url: linkedinUrl, intro_video_url: introVideoUrl }
-          : { company_name: companyName, company_url: companyUrl }
+          : { company_name: companyName, company_url: companyUrl, meet_team_url: meetTeamUrl }
         ),
       }
 
@@ -149,6 +151,7 @@ export default function Profile() {
         p_skills: skills || null,
         p_company_name: companyName || null,
         p_company_url: companyUrl || null,
+        p_meet_team_url: meetTeamUrl || null,
         p_linkedin_url: linkedinUrl || null,
         p_intro_video_url: introVideoUrl || null,
         p_video_visibility: videoVisibility,
@@ -260,6 +263,13 @@ export default function Profile() {
                 <input className="form-input" type="url"
                   placeholder="https://linkedin.com/in/yourname"
                   value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} />
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <label className="form-label">Meet the team link <span style={{ color: '#888', fontWeight: 400 }}>(optional)</span></label>
+                <input className="form-input" type="url"
+                  placeholder="https://loom.com/share/... or https://youtube.com/..."
+                  value={meetTeamUrl} onChange={e => setMeetTeamUrl(e.target.value)} />
+                <p style={{ fontSize: 11, color: '#888', marginTop: 4 }}>A video or page introducing your team — shown to candidates on every job listing</p>
               </div>
             </>
           )}
