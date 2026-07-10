@@ -18,16 +18,17 @@ export default function EmployerProfileView() {
   }, [id, myProfile])
 
   async function loadEmployer() {
-    // Candidates can only view employers they've applied to
+    // Candidates can only view employers whose jobs they've applied to
     if (myProfile?.role === 'candidate') {
-      const { data: appCheck } = await supabase
+      // Step 1: get all applications by this candidate
+      const { data: apps } = await supabase
         .from('applications')
-        .select('id, jobs!inner(employer_id)')
+        .select('job_id, jobs!inner(employer_id)')
         .eq('candidate_id', myProfile.id)
-        .eq('jobs.employer_id', id)
-        .limit(1)
 
-      if (!appCheck || appCheck.length === 0) {
+      // Step 2: check if any application's job belongs to this employer
+      const hasAccess = (apps || []).some(a => a.jobs?.employer_id === id)
+      if (!hasAccess) {
         setAccessDenied(true)
         setLoading(false)
         return
