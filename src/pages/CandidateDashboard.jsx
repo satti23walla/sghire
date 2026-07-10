@@ -80,7 +80,7 @@ export default function CandidateDashboard() {
     try {
       const { data } = await supabase
         .from('applications')
-        .select('*, jobs (title, company_name, location), video_responses (id, type, video_url), projects (id, title, project_url)')
+        .select('*, jobs (id, title, company_name, location, employer_id), video_responses (id, type, video_url), projects (id, title, project_url)')
         .eq('candidate_id', profile.id)
         .order('created_at', { ascending: false })
       setApplications(data || [])
@@ -629,9 +629,17 @@ export default function CandidateDashboard() {
                     {app.video_responses?.some(v => v.type === 'job_response') && <span className="badge badge-green">🎥 Response</span>}
                     {app.projects?.length > 0 && <span className="badge badge-purple">💼 Project</span>}
                   </div>
-                  <p style={{ fontSize: 11, color: '#aaa', marginTop: 8 }}>
-                    Applied {new Date(app.created_at).toLocaleDateString('en-SG')}
-                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                    <p style={{ fontSize: 11, color: '#aaa' }}>
+                      Applied {new Date(app.created_at).toLocaleDateString('en-SG')}
+                    </p>
+                    {app.jobs?.employer_id && (
+                      <button className="btn btn-outline" style={{ fontSize: 11, padding: '4px 10px' }}
+                        onClick={() => navigate(`/employer/${app.jobs.employer_id}`)}>
+                        View employer →
+                      </button>
+                    )}
+                  </div>
                 </div>
               )
             })

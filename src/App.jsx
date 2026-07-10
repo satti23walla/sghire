@@ -8,6 +8,7 @@ import Jobs from './pages/Jobs'
 import JobDetail from './pages/JobDetail'
 import Profile from './pages/Profile'
 import CandidateProfileView from './pages/CandidateProfileView'
+import EmployerProfileView from './pages/EmployerProfileView'
 import Notifications from './pages/Notifications'
 import { useAuth } from './contexts/AuthContext'
 
@@ -67,6 +68,11 @@ export default function App() {
           <Route path="/notifications" element={
             <ProtectedRoute>
               <Notifications />
+            </ProtectedRoute>
+          } />
+          <Route path="/employer/:id" element={
+            <ProtectedRoute>
+              <EmployerProfileView />
             </ProtectedRoute>
           } />
           <Route path="/candidate/:id" element={
