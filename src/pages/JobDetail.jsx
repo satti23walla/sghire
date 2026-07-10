@@ -29,7 +29,7 @@ export default function JobDetail() {
   const [responseVideo, setResponseVideo] = useState('')
 
   useEffect(() => {
-    supabase.from('jobs').select('*, profiles!employer_id(full_name, company_name, intro_video_url, video_visibility, avatar_url, linkedin_url, company_url, meet_team_url)').eq('id', id).single()
+    supabase.from('jobs').select('*, profiles!employer_id(*)').eq('id', id).single()
       .then(({ data }) => { setJob(data); setLoading(false) })
   }, [id])
 
