@@ -137,7 +137,12 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
       {/* READY / RECORDING */}
       {(state === 'ready' || state === 'recording') && (
         <div>
-          <video ref={videoRef} autoPlay muted playsInline
+          <video
+            ref={(el) => {
+              videoRef.current = el
+              if (el && streamRef.current) el.srcObject = streamRef.current
+            }}
+            autoPlay muted playsInline
             style={{ width: '100%', borderRadius: 8, background: '#000', maxHeight: 220, objectFit: 'cover', display: 'block' }} />
           <div style={{ display: 'flex', gap: 10, marginTop: 10, alignItems: 'center' }}>
             {state === 'ready' && (
