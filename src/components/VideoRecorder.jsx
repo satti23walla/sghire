@@ -85,9 +85,24 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
     setState('uploading')
     setProgress(10)
     try {
-      // Get one-time upload URL from Edge Function
-      const { data: tokenData, error: tokenErr } = await supabase.functions.invoke('get-upload-token', { body: { userId, context } })
-      if (tokenErr) throw new Error(tokenErr.message)
+      // Call Edge Function directly via fetch — avoids supabase.functions.invoke CORS issues
+      const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-upload-token`
+      const fnRes = await fetch(fnUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ userId, context }),
+      })
+
+      if (!fnRes.ok) {
+        const errText = await fnRes.text()
+        throw new Error(`Edge function error: ${fnRes.status} ${errText}`)
+      }
+
+      const tokenData = await fnRes.json()
       if (tokenData?.error) throw new Error(tokenData.error)
 
       const { uploadURL, uid } = tokenData
@@ -97,7 +112,7 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
       await new Promise((resolve, reject) => {
         const upload = new tus.Upload(blobRef.current, {
           uploadUrl: uploadURL,
-          chunkSize: 5 * 1024 * 1024, // 5MB chunks
+          chunkSize: 5 * 1024 * 1024,
           retryDelays: [0, 3000, 5000, 10000],
           onProgress: (bytesUploaded, bytesTotal) => {
             const pct = 20 + Math.round((bytesUploaded / bytesTotal) * 75)
@@ -112,6 +127,7 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
       setState('done')
       onVideoRecorded({ cloudflare_video_id: uid })
     } catch (err) {
+      console.error('Video upload error:', err)
       setError(err.message || 'Upload failed — please try again')
       setState('preview')
     }
