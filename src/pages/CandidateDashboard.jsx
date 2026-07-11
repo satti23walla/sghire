@@ -110,6 +110,14 @@ export default function CandidateDashboard() {
     } finally { setLoadingTargets(false) }
   }
 
+  async function handleWithdraw(appId) {
+    if (!window.confirm('Withdraw this application? This cannot be undone.')) return
+    const { error } = await supabase.from('applications').delete().eq('id', appId)
+    if (!error) {
+      setApplications(prev => prev.filter(a => a.id !== appId))
+    }
+  }
+
   async function handleAddPortfolio(e) {
     e.preventDefault()
     if (!newTitle.trim()) return
@@ -628,16 +636,23 @@ export default function CandidateDashboard() {
                     {app.video_responses?.some(v => v.type === 'job_response') && <span className="badge badge-green">🎥 Response</span>}
                     {app.projects?.length > 0 && <span className="badge badge-purple">💼 Project</span>}
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 10 }}>
                     <p style={{ fontSize: 11, color: '#aaa' }}>
                       Applied {new Date(app.created_at).toLocaleDateString('en-SG')}
                     </p>
-                    {app.jobs?.employer_id && (
-                      <button className="btn btn-outline" style={{ fontSize: 11, padding: '4px 10px' }}
-                        onClick={() => navigate(`/employer/${app.jobs.employer_id}`)}>
-                        View employer →
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      {app.jobs?.employer_id && (
+                        <button className="btn btn-outline" style={{ fontSize: 11, padding: '4px 10px' }}
+                          onClick={() => navigate(`/employer/${app.jobs.employer_id}`)}>
+                          View employer →
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleWithdraw(app.id)}
+                        style={{ fontSize: 11, padding: '4px 10px', borderRadius: 8, cursor: 'pointer', border: '1px solid #FAECE7', background: '#FAECE7', color: '#D85A30' }}>
+                        Withdraw
                       </button>
-                    )}
+                    </div>
                   </div>
                 </div>
               )
