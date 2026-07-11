@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 
-export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 120, label = 'Record video' }) {
+export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 120, label = 'Record video', userId = null, context = 'unknown' }) {
   const [state, setState] = useState('idle') // idle|requesting|ready|recording|preview|uploading|done
   const [countdown, setCountdown] = useState(maxSeconds)
   const [progress, setProgress] = useState(0)
@@ -85,7 +85,7 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
     setProgress(10)
     try {
       // Get one-time upload URL from Edge Function
-      const { data: tokenData, error: tokenErr } = await supabase.functions.invoke('get-upload-token')
+      const { data: tokenData, error: tokenErr } = await supabase.functions.invoke('get-upload-token', { body: { userId, context } })
       if (tokenErr) throw new Error(tokenErr.message)
       setProgress(30)
 
