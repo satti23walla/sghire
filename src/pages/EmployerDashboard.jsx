@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import AvatarImage from '../components/AvatarImage'
+import VideoPlayer from '../components/VideoPlayer'
 import { notify } from '../lib/notifications'
 
 const statusColors = {
@@ -53,7 +54,7 @@ export default function EmployerDashboard() {
       .from('applications')
       .select(`
         *,
-        profiles!candidate_id (full_name, headline, location, skills, linkedin_url, intro_video_url, avatar_url, email, video_visibility),
+        profiles!candidate_id (full_name, headline, location, skills, linkedin_url, intro_video_url, cloudflare_intro_video_id, avatar_url, email, video_visibility),
         video_responses (id, type, video_url),
         projects (id, title, description, project_url)
       `)
@@ -402,12 +403,13 @@ export default function EmployerDashboard() {
                             🎥 Intro video ↗
                           </a>
                         )}
-                        {app.profiles?.intro_video_url && ['public', 'applications'].includes(app.profiles?.video_visibility) && (
-                          <div key="intro" style={{ marginBottom: 6 }}>
-                            <a href={app.profiles.intro_video_url} target="_blank" rel="noreferrer"
-                              style={{ fontSize: 13, color: '#1D9E75', textDecoration: 'none' }}>
-                              🎥 Watch candidate intro video ↗
-                            </a>
+                        {(app.profiles?.intro_video_url || app.profiles?.cloudflare_intro_video_id) && ['public', 'applications'].includes(app.profiles?.video_visibility) && (
+                          <div key="intro" style={{ marginBottom: 8 }}>
+                            <VideoPlayer
+                              cloudflareVideoId={app.profiles.cloudflare_intro_video_id}
+                              fallbackUrl={app.profiles.intro_video_url}
+                              label="Watch candidate intro video"
+                            />
                           </div>
                         )}
                         {app.video_responses?.map(v => (

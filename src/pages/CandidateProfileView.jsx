@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { notify } from '../lib/notifications'
 import AvatarImage from '../components/AvatarImage'
+import VideoPlayer from '../components/VideoPlayer'
 
 const typeIcons = { project: '💼', website: '🌐', video: '🎥', article: '📝', other: '🔗' }
 const statusColors = {

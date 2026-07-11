@@ -5,6 +5,7 @@ import { useCountUp } from '../hooks/useCountUp'
 import OnboardingWizard from '../components/OnboardingWizard'
 import { supabase } from '../lib/supabase'
 import AvatarImage from '../components/AvatarImage'
+import VideoPlayer from '../components/VideoPlayer'
 
 const statusColors = {
   submitted:    { bg: '#E1F5EE', tc: '#0F6E56' },
@@ -175,7 +176,7 @@ export default function CandidateDashboard() {
     { done: !!profile.location, label: 'Location', points: 10 },
     { done: !!profile.avatar_url, label: 'Profile photo', points: 10 },
     { done: !!profile.linkedin_url, label: 'LinkedIn URL', points: 15 },
-    { done: !!profile.intro_video_url, label: 'Intro video', points: 20 },
+    { done: !!(profile.intro_video_url || profile.cloudflare_intro_video_id), label: 'Intro video', points: 20 },
     { done: portfolio.length > 0, label: 'Portfolio item', points: 5 },
   ]
   const strengthScore = strengthItems.reduce((sum, i) => i.done ? sum + i.points : sum, 0)
@@ -301,15 +302,13 @@ export default function CandidateDashboard() {
             </div>
           </div>
 
-          {profile.intro_video_url && (
+          {(profile.intro_video_url || profile.cloudflare_intro_video_id) && (
             <div className="card" style={{ marginTop: 10, background: '#E1F5EE', border: 'none' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div className="play-btn" style={{ background: '#1D9E75', flexShrink: 0 }}><div className="play-triangle" /></div>
-                <div>
-                  <p style={{ fontWeight: 500, fontSize: 13, color: '#0F6E56', margin: 0 }}>Intro video</p>
-                  <a href={profile.intro_video_url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: '#0F6E56', opacity: 0.8 }}>Watch ↗</a>
-                </div>
-              </div>
+              <VideoPlayer
+                cloudflareVideoId={profile.cloudflare_intro_video_id}
+                fallbackUrl={profile.intro_video_url}
+                label="Watch intro video"
+              />
             </div>
           )}
 
