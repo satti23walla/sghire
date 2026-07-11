@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
+import VideoRecorder from '../components/VideoRecorder'
 
 const PORTFOLIO_TYPES = [
   { key: 'project',  icon: '💼', label: 'Project' },
@@ -22,6 +23,8 @@ export default function Profile() {
   const [meetTeamUrl, setMeetTeamUrl] = useState('')
   const [linkedinUrl, setLinkedinUrl] = useState('')
   const [introVideoUrl, setIntroVideoUrl] = useState('')
+  const [cloudflareIntroId, setCloudflareIntroId] = useState('')
+  const [introInputMode, setIntroInputMode] = useState('url') // 'url' | 'record'
   const [videoVisibility, setVideoVisibility] = useState('applications')
   const [avatarUrl, setAvatarUrl] = useState('')
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
@@ -51,6 +54,7 @@ export default function Profile() {
       setMeetTeamUrl(profile.meet_team_url || '')
       setLinkedinUrl(profile.linkedin_url || '')
       setIntroVideoUrl(profile.intro_video_url || '')
+      setCloudflareIntroId(profile.cloudflare_intro_video_id || '')
       setVideoVisibility(profile.video_visibility || 'applications')
       setAvatarUrl(profile.avatar_url || '')
       if (profile.role === 'candidate') loadPortfolio()
@@ -154,6 +158,7 @@ export default function Profile() {
         p_meet_team_url: meetTeamUrl || null,
         p_linkedin_url: linkedinUrl || null,
         p_intro_video_url: introVideoUrl || null,
+        p_cloudflare_intro_video_id: cloudflareIntroId || null,
         p_video_visibility: videoVisibility,
         p_avatar_url: avatarUrl || null,
       })
@@ -290,19 +295,60 @@ export default function Profile() {
               <div style={{ marginBottom: 20 }}>
                 <label className="form-label">
                   {profile.role === 'candidate' ? '🎥 Intro video — who you are' : '🎥 Meet your hiring manager video'}
-                  <span style={{ color: '#888', fontWeight: 400 }}> (Loom, YouTube, Google Drive)</span>
                 </label>
-                <input className="form-input" type="url"
-                  placeholder="https://loom.com/share/..."
-                  value={introVideoUrl} onChange={e => setIntroVideoUrl(e.target.value)} />
-                <p style={{ fontSize: 11, color: '#888', marginTop: 4 }}>
-                  {profile.role === 'candidate'
-                    ? 'A 1–2 min video: who you are, what you do, what you\'re looking for.'
-                    : 'A 1–2 min video: who you are, your team, what makes your company a great place to work.'}
-                </p>
+
+                {/* Toggle */}
+                <div style={{ display: 'flex', gap: 8, marginBottom: 10, marginTop: 6 }}>
+                  {[
+                    { key: 'record', label: '● Record in browser' },
+                    { key: 'url', label: '🔗 Paste URL' },
+                  ].map(opt => (
+                    <button key={opt.key} type="button" onClick={() => setIntroInputMode(opt.key)}
+                      style={{
+                        padding: '6px 14px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
+                        border: `1.5px solid ${introInputMode === opt.key ? '#1D9E75' : '#e0e0dc'}`,
+                        background: introInputMode === opt.key ? '#E1F5EE' : '#fff',
+                        color: introInputMode === opt.key ? '#0F6E56' : '#666',
+                        fontWeight: introInputMode === opt.key ? 500 : 400,
+                      }}>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+
+                {introInputMode === 'record' ? (
+                  cloudflareIntroId ? (
+                    <div style={{ background: '#E1F5EE', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span>✅</span>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 13, fontWeight: 500, color: '#0F6E56' }}>Intro video recorded</p>
+                        <p style={{ fontSize: 11, color: '#888' }}>Stored securely on Cloudflare</p>
+                      </div>
+                      <button type="button" onClick={() => setCloudflareIntroId('')}
+                        style={{ border: 'none', background: 'none', color: '#888', fontSize: 12, cursor: 'pointer' }}>
+                        Re-record
+                      </button>
+                    </div>
+                  ) : (
+                    <VideoRecorder
+                      label="Record your intro video"
+                      maxSeconds={120}
+                      onVideoRecorded={({ cloudflare_video_id }) => setCloudflareIntroId(cloudflare_video_id)}
+                    />
+                  )
+                ) : (
+                  <div>
+                    <input className="form-input" type="url"
+                      placeholder="https://loom.com/share/... or https://youtube.com/..."
+                      value={introVideoUrl} onChange={e => setIntroVideoUrl(e.target.value)} />
+                    <p style={{ fontSize: 11, color: '#888', marginTop: 4 }}>
+                      Paste a link from Loom, YouTube, Google Drive, or any video platform
+                    </p>
+                  </div>
+                )}
 
                 {/* Visibility control */}
-                {introVideoUrl && (
+                {(introVideoUrl || cloudflareIntroId) && (
                   <div style={{ marginTop: 10 }}>
                     <label className="form-label">Who can see this video?</label>
                     <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>

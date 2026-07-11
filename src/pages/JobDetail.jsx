@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import VideoRecorder from '../components/VideoRecorder'
 import { useAuth } from '../contexts/AuthContext'
 import { notify } from '../lib/notifications'
 
@@ -27,6 +28,8 @@ export default function JobDetail() {
   const [coverNote, setCoverNote] = useState('')
   const [referenceUrl, setReferenceUrl] = useState('')
   const [responseVideo, setResponseVideo] = useState('')
+  const [cloudflareVideoId, setCloudflareVideoId] = useState('')
+  const [videoInputMode, setVideoInputMode] = useState('url') // url|record
 
   useEffect(() => {
     supabase.from('jobs').select('*, profiles!employer_id(*)').eq('id', id).single()
@@ -66,11 +69,12 @@ export default function JobDetail() {
       if (appErr) throw appErr
 
       // Add video response if provided
-      if (responseVideo.trim()) {
+      if (responseVideo.trim() || cloudflareVideoId) {
         await supabase.from('video_responses').insert({
           application_id: app.id,
           type: 'job_response',
-          video_url: responseVideo.trim(),
+          video_url: responseVideo.trim() || null,
+          cloudflare_video_id: cloudflareVideoId || null,
         })
       }
 
@@ -283,12 +287,54 @@ export default function JobDetail() {
                 <label className="form-label">
                   Video response <span style={{ color: '#888', fontWeight: 400 }}>(optional but recommended)</span>
                 </label>
-                <div style={{ background: '#f4f4f2', borderRadius: 8, padding: '8px 12px', marginBottom: 8, fontSize: 12, color: '#555' }}>
+                <div style={{ background: '#f4f4f2', borderRadius: 8, padding: '8px 12px', marginBottom: 10, fontSize: 12, color: '#555' }}>
                   Q: <em>{job.video_question}</em>
                 </div>
-                <input className="form-input" type="url"
-                  placeholder="Paste your Loom or YouTube link here..."
-                  value={responseVideo} onChange={e => setResponseVideo(e.target.value)} />
+
+                {/* Toggle */}
+                <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                  {[
+                    { key: 'record', label: '● Record in browser' },
+                    { key: 'url', label: '🔗 Paste URL' },
+                  ].map(opt => (
+                    <button key={opt.key} type="button" onClick={() => setVideoInputMode(opt.key)}
+                      style={{
+                        padding: '6px 14px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
+                        border: `1.5px solid ${videoInputMode === opt.key ? '#1D9E75' : '#e0e0dc'}`,
+                        background: videoInputMode === opt.key ? '#E1F5EE' : '#fff',
+                        color: videoInputMode === opt.key ? '#0F6E56' : '#666',
+                        fontWeight: videoInputMode === opt.key ? 500 : 400,
+                      }}>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+
+                {videoInputMode === 'record' ? (
+                  cloudflareVideoId ? (
+                    <div style={{ background: '#E1F5EE', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <span>✅</span>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 13, fontWeight: 500, color: '#0F6E56' }}>Video response recorded</p>
+                        <p style={{ fontSize: 11, color: '#888' }}>Stored securely on Cloudflare</p>
+                      </div>
+                      <button type="button" onClick={() => setCloudflareVideoId('')}
+                        style={{ border: 'none', background: 'none', color: '#888', fontSize: 12, cursor: 'pointer' }}>
+                        Re-record
+                      </button>
+                    </div>
+                  ) : (
+                    <VideoRecorder
+                      label="Record your video response"
+                      maxSeconds={180}
+                      onVideoRecorded={({ cloudflare_video_id }) => setCloudflareVideoId(cloudflare_video_id)}
+                    />
+                  )
+                ) : (
+                  <input className="form-input" type="url"
+                    placeholder="Paste your Loom or YouTube link here..."
+                    value={responseVideo} onChange={e => setResponseVideo(e.target.value)} />
+                )}
               </div>
             )}
 
