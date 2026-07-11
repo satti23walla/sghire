@@ -85,8 +85,8 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
     setState('uploading')
     setProgress(10)
     try {
-      // Call Edge Function directly via fetch — avoids supabase.functions.invoke CORS issues
-      const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-upload-token`
+      // Call Edge Function directly — slug is bright-responder
+      const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bright-responder`
       const fnRes = await fetch(fnUrl, {
         method: 'POST',
         headers: {
