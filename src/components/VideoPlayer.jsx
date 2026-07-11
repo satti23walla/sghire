@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
 
 export default function VideoPlayer({ cloudflareVideoId, fallbackUrl, label = 'Watch video' }) {
   const [signedUrl, setSignedUrl] = useState(null)
@@ -23,14 +22,24 @@ export default function VideoPlayer({ cloudflareVideoId, fallbackUrl, label = 'W
     setLoading(true)
     setError('')
     try {
-      const { data, error: fnErr } = await supabase.functions.invoke('get-video-url', {
-        body: { videoId: cloudflareVideoId }
+      const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/clever-processor`
+      const res = await fetch(fnUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ videoId: cloudflareVideoId }),
       })
-      if (fnErr) throw new Error(fnErr.message)
+      if (!res.ok) throw new Error(`Failed to load video (${res.status})`)
+      const data = await res.json()
+      if (data.error) throw new Error(JSON.stringify(data.error))
       setSignedUrl(data.signedUrl)
       setPlaying(true)
     } catch (err) {
       setError('Could not load video. Please try again.')
+      console.error('VideoPlayer error:', err)
     } finally {
       setLoading(false)
     }
