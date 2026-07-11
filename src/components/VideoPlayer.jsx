@@ -55,13 +55,21 @@ export default function VideoPlayer({ cloudflareVideoId, fallbackUrl, label = 'W
 
   if (playing && signedUrl) {
     return (
-      <div style={{ borderRadius: 10, overflow: 'hidden', position: 'relative', paddingTop: '56.25%' }}>
-        <iframe
-          src={signedUrl}
-          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
-          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
+      <div>
+        <a href={signedUrl} target="_blank" rel="noreferrer"
+          style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            background: '#E1F5EE', borderRadius: 10, padding: '12px 14px',
+            textDecoration: 'none',
+          }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#1D9E75', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 0, height: 0, borderStyle: 'solid', borderWidth: '6px 0 6px 11px', borderColor: 'transparent transparent transparent #fff', marginLeft: 2 }} />
+          </div>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 500, color: '#0F6E56', margin: 0 }}>{label} ↗</p>
+            <p style={{ fontSize: 11, color: '#0F6E56', opacity: 0.7, margin: 0 }}>Opens in new tab · Cloudflare Stream</p>
+          </div>
+        </a>
       </div>
     )
   }
