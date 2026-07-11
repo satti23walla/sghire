@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import * as tus from 'tus-js-client'
 
 export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 120, label = 'Record video', userId = null, context = 'unknown' }) {
   const [state, setState] = useState('idle') // idle|requesting|ready|recording|preview|uploading|done
@@ -87,17 +88,27 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
       // Get one-time upload URL from Edge Function
       const { data: tokenData, error: tokenErr } = await supabase.functions.invoke('get-upload-token', { body: { userId, context } })
       if (tokenErr) throw new Error(tokenErr.message)
-      setProgress(30)
+      if (tokenData?.error) throw new Error(tokenData.error)
 
       const { uploadURL, uid } = tokenData
-      const formData = new FormData()
-      formData.append('file', blobRef.current, 'recording.webm')
+      setProgress(20)
 
-      setProgress(50)
-      const uploadRes = await fetch(uploadURL, { method: 'POST', body: formData })
-      if (!uploadRes.ok) throw new Error('Upload to Cloudflare failed')
+      // Upload using TUS protocol (required by Cloudflare Stream)
+      await new Promise((resolve, reject) => {
+        const upload = new tus.Upload(blobRef.current, {
+          uploadUrl: uploadURL,
+          chunkSize: 5 * 1024 * 1024, // 5MB chunks
+          retryDelays: [0, 3000, 5000, 10000],
+          onProgress: (bytesUploaded, bytesTotal) => {
+            const pct = 20 + Math.round((bytesUploaded / bytesTotal) * 75)
+            setProgress(pct)
+          },
+          onSuccess: () => { setProgress(100); resolve() },
+          onError: (err) => reject(new Error('Upload failed: ' + err.message)),
+        })
+        upload.start()
+      })
 
-      setProgress(100)
       setState('done')
       onVideoRecorded({ cloudflare_video_id: uid })
     } catch (err) {
