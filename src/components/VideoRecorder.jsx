@@ -52,7 +52,6 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
     recorder.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
     recorder.onstop = () => {
       blobRef.current = new Blob(chunksRef.current, { type: 'video/webm' })
-      if (previewRef.current) previewRef.current.src = URL.createObjectURL(blobRef.current)
       setState('preview')
     }
     recorder.start(1000)
@@ -207,7 +206,15 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
       {/* PREVIEW */}
       {state === 'preview' && (
         <div>
-          <video ref={previewRef} controls autoPlay playsInline
+          <video
+            ref={(el) => {
+              previewRef.current = el
+              if (el && blobRef.current && !el.src) {
+                el.src = URL.createObjectURL(blobRef.current)
+                el.play().catch(() => {})
+              }
+            }}
+            controls playsInline
             style={{ width: '100%', borderRadius: 8, background: '#000', maxHeight: 220, display: 'block' }} />
           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
             <button className="btn btn-outline" style={{ flex: 1 }} onClick={reRecord}>↺ Re-record</button>
