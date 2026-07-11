@@ -107,16 +107,14 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
       const { uploadURL, uid } = tokenData
       setProgress(20)
 
-      // Upload directly via PATCH — Cloudflare Stream accepts this without TUS handshake
+      // Upload via POST — Cloudflare Stream direct upload
+      setProgress(40)
+      const formData = new FormData()
+      formData.append('file', blobRef.current, 'recording.webm')
+
       const uploadRes = await fetch(uploadURL, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/offset+octet-stream',
-          'Content-Length': String(blobRef.current.size),
-          'Upload-Offset': '0',
-          'Tus-Resumable': '1.0.0',
-        },
-        body: blobRef.current,
+        method: 'POST',
+        body: formData,
       })
 
       if (!uploadRes.ok) {
