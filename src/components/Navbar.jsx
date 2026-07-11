@@ -30,7 +30,7 @@ export default function Navbar() {
     <nav style={{ borderBottom: '0.5px solid #e0e0dc', background: '#fff', position: 'sticky', top: 0, zIndex: 10 }}>
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 16, height: 54 }}>
         <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
-          <img src="/logo.svg" alt="Hire It Right" style={{ height: 38, width: 'auto' }} />
+          <img src="/logo.png" alt="Hire It Right" style={{ height: 44, width: 'auto' }} />
         </Link>
 
         <div style={{ display: 'flex', gap: 6, marginLeft: 'auto', alignItems: 'center' }}>

@@ -27,7 +27,7 @@ export default function Landing() {
       <section style={{ padding: '72px 40px 56px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
 
         {/* Logo */}
-        <img src="/logo.svg" alt="Hire It Right" style={{ height: 180, width: 'auto', marginBottom: 32 }} />
+        <img src="/logo.png" alt="Hire It Right" style={{ height: 150, width: 'auto', marginBottom: 24 }} />
 
         {/* Sub */}
         <p style={{ fontSize: 15, color: '#888', maxWidth: 320, lineHeight: 1.75, marginBottom: 40 }}>
