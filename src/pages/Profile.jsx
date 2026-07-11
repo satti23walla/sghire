@@ -331,7 +331,7 @@ export default function Profile() {
                     </div>
                   ) : (
                     <VideoRecorder
-                      label="Record your intro video"
+                      label="Record your intro video (max 2 min)"
                       maxSeconds={120}
                       onVideoRecorded={({ cloudflare_video_id }) => setCloudflareIntroId(cloudflare_video_id)}
                     />

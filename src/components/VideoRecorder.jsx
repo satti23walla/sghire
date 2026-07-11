@@ -60,7 +60,11 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
     setState('recording')
     timerRef.current = setInterval(() => {
       setCountdown(prev => {
-        if (prev <= 1) { stopRecording(); return 0 }
+        if (prev <= 1) {
+          // Auto-stop at limit
+          stopRecording()
+          return 0
+        }
         return prev - 1
       })
     }, 1000)
@@ -146,7 +150,9 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#D85A30' }} />
                   <span style={{ fontSize: 13, color: '#D85A30', fontWeight: 500 }}>REC</span>
-                  <span style={{ fontSize: 13, color: '#666' }}>{fmt(countdown)} left</span>
+                  <span style={{ fontSize: 13, color: countdown <= 10 ? '#D85A30' : '#666', fontWeight: countdown <= 10 ? 600 : 400 }}>
+                    {fmt(countdown)} {countdown <= 10 ? '⚠️' : 'left'}
+                  </span>
                 </div>
                 <button className="btn btn-outline"
                   style={{ padding: '8px 16px', color: '#D85A30', borderColor: '#D85A30' }}
@@ -156,6 +162,11 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
               </>
             )}
           </div>
+          {state === 'ready' && (
+            <p style={{ fontSize: 11, color: '#aaa', marginTop: 6, textAlign: 'center' }}>
+              Recording will auto-stop at {fmt(maxSeconds)}
+            </p>
+          )}
         </div>
       )}
 

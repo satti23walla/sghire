@@ -325,8 +325,8 @@ export default function JobDetail() {
                     </div>
                   ) : (
                     <VideoRecorder
-                      label="Record your video response"
-                      maxSeconds={180}
+                      label="Record your video response (max 2 min · 1 per application)"
+                      maxSeconds={120}
                       onVideoRecorded={({ cloudflare_video_id }) => setCloudflareVideoId(cloudflare_video_id)}
                     />
                   )
