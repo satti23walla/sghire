@@ -26,16 +26,8 @@ export default function Landing() {
       {/* Hero */}
       <section style={{ padding: '72px 40px 56px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
 
-        {/* Badge */}
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#E1F5EE', padding: '5px 14px', borderRadius: 20, fontSize: 12, color: '#0F6E56', fontWeight: 500, marginBottom: 28 }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#1D9E75' }} />
-          Making hiring human
-        </div>
-
-        {/* Headline */}
-        <h1 style={{ fontSize: 46, fontWeight: 400, color: '#1a1a1a', lineHeight: 1.12, marginBottom: 18, maxWidth: 540, letterSpacing: -1, fontFamily: 'Georgia, serif' }}>
-          Hire the person,<br />not the <em style={{ color: '#1D9E75', fontStyle: 'italic' }}>résumé.</em>
-        </h1>
+        {/* Logo */}
+        <img src="/logo.svg" alt="Hire It Right" style={{ height: 180, width: 'auto', marginBottom: 32 }} />
 
         {/* Sub */}
         <p style={{ fontSize: 15, color: '#888', maxWidth: 320, lineHeight: 1.75, marginBottom: 40 }}>
