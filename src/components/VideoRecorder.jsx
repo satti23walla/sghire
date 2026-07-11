@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import * as tus from 'tus-js-client'
 
 export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 120, label = 'Record video', userId = null, context = 'unknown' }) {
   const [state, setState] = useState('idle') // idle|requesting|ready|recording|preview|uploading|done
@@ -108,27 +107,24 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
       const { uploadURL, uid } = tokenData
       setProgress(20)
 
-      // Upload using TUS protocol (required by Cloudflare Stream)
-      await new Promise((resolve, reject) => {
-        const upload = new tus.Upload(blobRef.current, {
-          endpoint: uploadURL,
-          uploadUrl: uploadURL,
-          chunkSize: 5 * 1024 * 1024,
-          retryDelays: null,
-          metadata: {
-            name: 'recording.webm',
-            filetype: 'video/webm',
-          },
-          onProgress: (bytesUploaded, bytesTotal) => {
-            const pct = 20 + Math.round((bytesUploaded / bytesTotal) * 75)
-            setProgress(pct)
-          },
-          onSuccess: () => { setProgress(100); resolve() },
-          onError: (err) => reject(new Error('Upload failed: ' + err.message)),
-        })
-        upload.start()
+      // Upload directly via PATCH — Cloudflare Stream accepts this without TUS handshake
+      const uploadRes = await fetch(uploadURL, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/offset+octet-stream',
+          'Content-Length': String(blobRef.current.size),
+          'Upload-Offset': '0',
+          'Tus-Resumable': '1.0.0',
+        },
+        body: blobRef.current,
       })
 
+      if (!uploadRes.ok) {
+        const errText = await uploadRes.text()
+        throw new Error(`Upload failed (${uploadRes.status}): ${errText}`)
+      }
+
+      setProgress(100)
       setState('done')
       onVideoRecorded({ cloudflare_video_id: uid })
     } catch (err) {
