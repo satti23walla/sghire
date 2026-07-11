@@ -281,15 +281,20 @@ export default function JobDetail() {
               </p>
             </div>
 
-            {/* Video response - only if job requires it */}
-            {job.video_question && (
-              <div style={{ marginBottom: 14 }}>
-                <label className="form-label">
-                  Video response <span style={{ color: '#888', fontWeight: 400 }}>(optional but recommended)</span>
-                </label>
+            {/* Video response - always available */}
+            <div style={{ marginBottom: 14 }}>
+              <label className="form-label">
+                🎥 Video response
+                {job.video_question
+                  ? <span style={{ color: '#888', fontWeight: 400 }}> (recommended)</span>
+                  : <span style={{ color: '#888', fontWeight: 400 }}> (optional — introduce yourself)</span>
+                }
+              </label>
+              {job.video_question && (
                 <div style={{ background: '#f4f4f2', borderRadius: 8, padding: '8px 12px', marginBottom: 10, fontSize: 12, color: '#555' }}>
                   Q: <em>{job.video_question}</em>
                 </div>
+              )}
 
                 {/* Toggle */}
                 <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
@@ -336,8 +341,8 @@ export default function JobDetail() {
                   <input className="form-input" type="url"
                     placeholder="Paste your Loom or YouTube link here..."
                     value={responseVideo} onChange={e => setResponseVideo(e.target.value)} />
-                )}
-              </div>
+              )}
+            </div>
             )}
 
             {/* Profile preview */}

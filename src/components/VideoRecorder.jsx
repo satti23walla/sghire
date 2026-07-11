@@ -140,7 +140,10 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
           <video
             ref={(el) => {
               videoRef.current = el
-              if (el && streamRef.current) el.srcObject = streamRef.current
+              // Only set srcObject if not already set — prevents flicker on re-render
+              if (el && streamRef.current && !el.srcObject) {
+                el.srcObject = streamRef.current
+              }
             }}
             autoPlay muted playsInline
             style={{ width: '100%', borderRadius: 8, background: '#000', maxHeight: 220, objectFit: 'cover', display: 'block' }} />
