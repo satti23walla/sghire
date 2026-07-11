@@ -32,9 +32,14 @@ export default function VideoPlayer({ cloudflareVideoId, fallbackUrl, label = 'W
         },
         body: JSON.stringify({ videoId: cloudflareVideoId }),
       })
-      if (!res.ok) throw new Error(`Failed to load video (${res.status})`)
       const data = await res.json()
-      if (data.error) throw new Error(JSON.stringify(data.error))
+
+      if (res.status === 202 || data?.error === 'processing') {
+        setError('⏳ Video is still processing — try again in 1–2 minutes.')
+        return
+      }
+      if (!res.ok || data?.error) throw new Error(data?.message || 'Failed to load video')
+
       setSignedUrl(data.signedUrl)
       setPlaying(true)
     } catch (err) {
