@@ -47,13 +47,13 @@ export default function VideoPlayer({ cloudflareVideoId, fallbackUrl, label = 'W
 
   if (playing && signedUrl) {
     return (
-      <div style={{ borderRadius: 10, overflow: 'hidden', background: '#000', position: 'relative' }}>
-        <video src={signedUrl} controls autoPlay playsInline
-          style={{ width: '100%', maxHeight: 300, display: 'block' }}
-          onError={() => setError('Video failed to load — the link may have expired.')} />
-        {error && (
-          <div style={{ padding: 12, background: '#FAECE7', color: '#D85A30', fontSize: 12 }}>{error}</div>
-        )}
+      <div style={{ borderRadius: 10, overflow: 'hidden', position: 'relative', paddingTop: '56.25%' }}>
+        <iframe
+          src={signedUrl}
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
       </div>
     )
   }
