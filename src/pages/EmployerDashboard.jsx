@@ -55,7 +55,7 @@ export default function EmployerDashboard() {
       .select(`
         *,
         profiles!candidate_id (full_name, headline, location, skills, linkedin_url, intro_video_url, cloudflare_intro_video_id, avatar_url, email, video_visibility),
-        video_responses (id, type, video_url),
+        video_responses (id, type, video_url, cloudflare_video_id),
         projects (id, title, description, project_url)
       `)
       .eq('job_id', jobId)
@@ -413,10 +413,13 @@ export default function EmployerDashboard() {
                           </div>
                         )}
                         {app.video_responses?.map(v => (
-                          <a key={v.id} href={v.video_url} target="_blank" rel="noreferrer"
-                            style={{ fontSize: 12, color: '#0F6E56', textDecoration: 'none', background: '#E1F5EE', padding: '4px 10px', borderRadius: 20, fontWeight: 500 }}>
-                            🎥 {v.type === 'job_response' ? 'Video response' : 'Intro video'} ↗
-                          </a>
+                          <div key={v.id} style={{ marginBottom: 8 }}>
+                            <VideoPlayer
+                              cloudflareVideoId={v.cloudflare_video_id}
+                              fallbackUrl={v.video_url}
+                              label={v.type === 'job_response' ? 'Watch video response' : 'Watch intro video'}
+                            />
+                          </div>
                         ))}
                       </div>
 

@@ -335,7 +335,15 @@ export default function Profile() {
                       maxSeconds={120}
                       userId={profile?.id}
                       context="intro"
-                      onVideoRecorded={({ cloudflare_video_id }) => setCloudflareIntroId(cloudflare_video_id)}
+                      onVideoRecorded={async ({ cloudflare_video_id }) => {
+                        setCloudflareIntroId(cloudflare_video_id)
+                        // Auto-save immediately so employer can see it
+                        await supabase.rpc('update_my_profile', {
+                          p_full_name: fullName,
+                          p_cloudflare_intro_video_id: cloudflare_video_id,
+                        })
+                        await refreshProfile().catch(() => {})
+                      }}
                     />
                   )
                 ) : (
