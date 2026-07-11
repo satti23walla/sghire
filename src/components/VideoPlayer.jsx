@@ -33,6 +33,9 @@ export default function VideoPlayer({ cloudflareVideoId, fallbackUrl, label = 'W
         body: JSON.stringify({ videoId: cloudflareVideoId }),
       })
       const data = await res.json()
+      console.log('[VideoPlayer] cloudflareVideoId:', cloudflareVideoId)
+      console.log('[VideoPlayer] response status:', res.status)
+      console.log('[VideoPlayer] response data:', JSON.stringify(data))
 
       if (res.status === 202 || data?.error === 'processing') {
         setError('⏳ Video is still processing — try again in 1–2 minutes.')
