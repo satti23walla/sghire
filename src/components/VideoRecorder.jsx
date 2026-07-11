@@ -207,14 +207,21 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
       {/* PREVIEW */}
       {state === 'preview' && (
         <div>
-          <video ref={previewRef} controls playsInline
+          <video ref={previewRef} controls autoPlay playsInline
             style={{ width: '100%', borderRadius: 8, background: '#000', maxHeight: 220, display: 'block' }} />
           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
             <button className="btn btn-outline" style={{ flex: 1 }} onClick={reRecord}>↺ Re-record</button>
+            <button className="btn btn-outline" style={{ flex: 1 }}
+              onClick={() => { if (previewRef.current) { previewRef.current.currentTime = 0; previewRef.current.play() } }}>
+              ▶ Replay
+            </button>
             <button className="btn btn-primary" style={{ flex: 2 }} onClick={uploadVideo}>
               ✓ Use this video
             </button>
           </div>
+          <p style={{ fontSize: 11, color: '#aaa', marginTop: 6, textAlign: 'center' }}>
+            Watch your recording before saving — click Replay to watch again
+          </p>
         </div>
       )}
 
