@@ -54,8 +54,8 @@ export default function Landing() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
               <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#EEEDFE', color: '#534AB7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600, flexShrink: 0 }}>KS</div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a' }}>Kunal Satija</div>
-                <div style={{ fontSize: 11, color: '#999' }}>Builder & Seller · Singapore</div>
+                <div style={{ fontSize: 13, fontWeight: 500, color: '#1a1a1a' }}>John W.</div>
+                <div style={{ fontSize: 11, color: '#999' }}>Sales Manager · Open to work · Singapore</div>
               </div>
             </div>
             <div style={{ background: 'linear-gradient(135deg,#0F6E56,#1D9E75)', borderRadius: 10, height: 88, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12, position: 'relative' }}>
