@@ -111,9 +111,14 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
       // Upload using TUS protocol (required by Cloudflare Stream)
       await new Promise((resolve, reject) => {
         const upload = new tus.Upload(blobRef.current, {
+          endpoint: uploadURL,
           uploadUrl: uploadURL,
           chunkSize: 5 * 1024 * 1024,
-          retryDelays: [0, 3000, 5000, 10000],
+          retryDelays: null,
+          metadata: {
+            name: 'recording.webm',
+            filetype: 'video/webm',
+          },
           onProgress: (bytesUploaded, bytesTotal) => {
             const pct = 20 + Math.round((bytesUploaded / bytesTotal) * 75)
             setProgress(pct)
