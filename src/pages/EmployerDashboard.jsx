@@ -159,6 +159,10 @@ export default function EmployerDashboard() {
     const candidateName = app.profiles?.full_name || 'Candidate'
     const jobTitle = selectedJob?.title || 'the role'
     const companyName = profile.company_name || profile.full_name || 'the company'
+    const employerName = profile.full_name || profile.company_name || 'the hiring manager'
+    const senderLine = profile.full_name && profile.company_name
+      ? `${profile.full_name} from ${profile.company_name}`
+      : companyName
 
     // Format date nicely
     let hour24 = parseInt(inviteHour)
@@ -212,12 +216,12 @@ export default function EmployerDashboard() {
       <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">
         <div style="background:#1D9E75;padding:24px 32px;border-radius:10px 10px 0 0">
           <h2 style="color:white;margin:0;font-size:20px">🎉 You've been shortlisted!</h2>
-          <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:14px">${companyName} would like to meet you</p>
+          <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:14px">${senderLine} wants to meet you</p>
         </div>
         <div style="background:#f9f9f7;padding:28px 32px;border-radius:0 0 10px 10px;border:1px solid #e0e0dc;border-top:none">
           <p style="font-size:15px;color:#1a1a1a">Hi <strong>${candidateName}</strong>,</p>
           <p style="font-size:14px;color:#444;line-height:1.6">
-            Great news — <strong>${companyName}</strong> has shortlisted your application for <strong>${jobTitle}</strong> and would like to ${inviteType === 'phone' ? 'have a phone discussion' : 'meet online'} with you.
+            Great news — <strong>${senderLine}</strong> has shortlisted your application for <strong>${jobTitle}</strong> and would like to ${inviteType === 'phone' ? 'have a phone discussion' : 'meet online'} with you.
           </p>
           <div style="background:white;border:1px solid #e0e0dc;border-radius:8px;padding:16px 20px;margin:20px 0">
             <p style="margin:0 0 8px;font-size:12px;color:#888;font-weight:500;letter-spacing:1px;text-transform:uppercase">Meeting details</p>
@@ -244,7 +248,7 @@ export default function EmployerDashboard() {
       },
       body: JSON.stringify({
         to: candidateEmail,
-        subject: `Interview invitation: ${jobTitle} at ${companyName}`,
+        subject: `${senderLine} has shortlisted you for ${jobTitle}`,
         html,
         attachments: [{ filename: 'interview-invitation.ics', content: icsB64 }]
       })
@@ -257,7 +261,7 @@ export default function EmployerDashboard() {
     notify({
       userId: app.candidate_id,
       type: 'status_changed',
-      title: `🎉 Interview invite from ${companyName}`,
+      title: `🎉 ${senderLine} wants to meet you!`,
       body: `${inviteType === 'phone' ? 'Phone call' : 'Online meeting'} on ${dateFormatted} at ${displayTime}`,
       link: '/candidate',
     }).catch(() => {})
