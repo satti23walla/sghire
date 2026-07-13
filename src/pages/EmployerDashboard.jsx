@@ -35,6 +35,17 @@ export default function EmployerDashboard() {
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState('')
 
+  // Invite modal state
+  const [inviteModal, setInviteModal] = useState(null) // { app } | null
+  const [inviteType, setInviteType] = useState('phone') // 'phone' | 'online'
+  const [inviteDate, setInviteDate] = useState('')
+  const [inviteTime, setInviteTime] = useState('')
+  const [invitePhone, setInvitePhone] = useState('')
+  const [inviteLink, setInviteLink] = useState('')
+  const [inviteNote, setInviteNote] = useState('')
+  const [sendingInvite, setSendingInvite] = useState(false)
+  const [inviteError, setInviteError] = useState('')
+
   useEffect(() => {
     if (profile) loadJobs()
   }, [profile])
@@ -135,6 +146,121 @@ export default function EmployerDashboard() {
     if (selectedJob) await loadApplications(selectedJob.id)
   }
 
+  async function sendInvite() {
+    if (!inviteDate || !inviteTime) { setInviteError('Please select a date and time.'); return }
+    if (inviteType === 'phone' && !invitePhone.trim()) { setInviteError('Please enter a phone number.'); return }
+    if (inviteType === 'online' && !inviteLink.trim()) { setInviteError('Please paste your meeting link.'); return }
+
+    setSendingInvite(true); setInviteError('')
+    const app = inviteModal.app
+    const candidateEmail = app.profiles?.email
+    const candidateName = app.profiles?.full_name || 'Candidate'
+    const jobTitle = selectedJob?.title || 'the role'
+    const companyName = profile.company_name || profile.full_name || 'the company'
+
+    // Format date nicely
+    const dateObj = new Date(`${inviteDate}T${inviteTime}`)
+    const endObj = new Date(dateObj.getTime() + 60 * 60 * 1000) // +1 hour
+    const fmt = (d) => d.toISOString().replace(/[-:]/g,'').split('.')[0]
+    const dtstamp = fmt(new Date())
+
+    const location = inviteType === 'phone'
+      ? `Phone: ${invitePhone}`
+      : inviteLink
+
+    const description = inviteType === 'phone'
+      ? `Phone discussion for ${jobTitle} at ${companyName}\\nPhone: ${invitePhone}${inviteNote ? '\\n\\nNote: ' + inviteNote : ''}`
+      : `Online meeting for ${jobTitle} at ${companyName}\\nMeeting link: ${inviteLink}${inviteNote ? '\\n\\nNote: ' + inviteNote : ''}`
+
+    // Generate ICS calendar invite
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//HireItRight//HireItRight//EN',
+      'CALSCALE:GREGORIAN',
+      'METHOD:REQUEST',
+      'BEGIN:VEVENT',
+      `UID:${app.id}-${Date.now()}@hireitright.com`,
+      `DTSTAMP:${dtstamp}Z`,
+      `DTSTART:${fmt(dateObj)}`,
+      `DTEND:${fmt(endObj)}`,
+      `SUMMARY:Interview: ${jobTitle} at ${companyName}`,
+      `DESCRIPTION:${description}`,
+      `LOCATION:${location}`,
+      `ORGANIZER;CN=${companyName}:MAILTO:noreply@hireitright.com`,
+      `ATTENDEE;CUTYPE=INDIVIDUAL;ROLE=REQ-PARTICIPANT;CN=${candidateName}:MAILTO:${candidateEmail}`,
+      'STATUS:CONFIRMED',
+      'BEGIN:VALARM',
+      'TRIGGER:-PT30M',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:Interview reminder',
+      'END:VALARM',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n')
+
+    const dateFormatted = dateObj.toLocaleDateString('en-SG', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
+    const timeFormatted = dateObj.toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit' })
+
+    const html = `
+      <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">
+        <div style="background:#1D9E75;padding:24px 32px;border-radius:10px 10px 0 0">
+          <h2 style="color:white;margin:0;font-size:20px">🎉 You've been shortlisted!</h2>
+          <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:14px">${companyName} would like to meet you</p>
+        </div>
+        <div style="background:#f9f9f7;padding:28px 32px;border-radius:0 0 10px 10px;border:1px solid #e0e0dc;border-top:none">
+          <p style="font-size:15px;color:#1a1a1a">Hi <strong>${candidateName}</strong>,</p>
+          <p style="font-size:14px;color:#444;line-height:1.6">
+            Great news — <strong>${companyName}</strong> has shortlisted your application for <strong>${jobTitle}</strong> and would like to ${inviteType === 'phone' ? 'have a phone discussion' : 'meet online'} with you.
+          </p>
+          <div style="background:white;border:1px solid #e0e0dc;border-radius:8px;padding:16px 20px;margin:20px 0">
+            <p style="margin:0 0 8px;font-size:12px;color:#888;font-weight:500;letter-spacing:1px;text-transform:uppercase">Meeting details</p>
+            <p style="margin:4px 0;font-size:14px;color:#1a1a1a">📅 <strong>${dateFormatted}</strong></p>
+            <p style="margin:4px 0;font-size:14px;color:#1a1a1a">🕐 <strong>${timeFormatted}</strong></p>
+            <p style="margin:4px 0;font-size:14px;color:#1a1a1a">${inviteType === 'phone' ? `📞 Phone: <strong>${invitePhone}</strong>` : `💻 Meeting: <a href="${inviteLink}" style="color:#1D9E75">${inviteLink}</a>`}</p>
+            ${inviteNote ? `<p style="margin:12px 0 0;font-size:13px;color:#666;border-top:1px solid #f0f0ee;padding-top:10px">${inviteNote}</p>` : ''}
+          </div>
+          <p style="font-size:13px;color:#888">📎 A calendar invite (.ics) is attached — add it to your calendar with one click.</p>
+          <p style="font-size:13px;color:#888;margin-top:20px">Good luck! 🐧<br><strong>The HireItRight Team</strong></p>
+        </div>
+      </div>
+    `
+
+    const icsB64 = btoa(unescape(encodeURIComponent(ics)))
+
+    const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-notification-email`
+    await fetch(fnUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({
+        to: candidateEmail,
+        subject: `Interview invitation: ${jobTitle} at ${companyName}`,
+        html,
+        attachments: [{ filename: 'interview-invitation.ics', content: icsB64 }]
+      })
+    })
+
+    // Update status to shortlisted
+    await updateStatus(app.id, 'shortlisted')
+
+    // Send in-app notification
+    notify({
+      userId: app.candidate_id,
+      type: 'status_changed',
+      title: `🎉 Interview invite from ${companyName}`,
+      body: `${inviteType === 'phone' ? 'Phone call' : 'Online meeting'} on ${dateFormatted} at ${timeFormatted}`,
+      link: '/candidate',
+    }).catch(() => {})
+
+    setSendingInvite(false)
+    setInviteModal(null)
+    setInviteDate(''); setInviteTime(''); setInvitePhone(''); setInviteLink(''); setInviteNote('')
+  }
+
   function pickJob(job) {
     setSelectedJob(job)
     setTab('applications')
@@ -142,6 +268,65 @@ export default function EmployerDashboard() {
   }
 
   return (
+    <>
+    {inviteModal && (
+      <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.5)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:200, padding:16 }}>
+        <div style={{ background:'#fff', borderRadius:16, maxWidth:460, width:'100%', padding:28 }}>
+          <h3 style={{ fontSize:17, fontWeight:600, marginBottom:4 }}>Send interview invite</h3>
+          <p style={{ fontSize:13, color:'#888', marginBottom:20 }}>
+            Inviting <strong>{inviteModal.app.profiles?.full_name}</strong> for <em>{selectedJob?.title}</em>
+          </p>
+          <div style={{ display:'flex', gap:10, marginBottom:18 }}>
+            {[{key:'phone',label:'📞 Phone discussion'},{key:'online',label:'💻 Online meeting'}].map(opt => (
+              <button key={opt.key} type="button" onClick={() => setInviteType(opt.key)}
+                style={{ flex:1, padding:'10px 8px', borderRadius:10, cursor:'pointer', fontSize:13, fontWeight:500,
+                  border:`1.5px solid ${inviteType===opt.key?'#1D9E75':'#e0e0dc'}`,
+                  background:inviteType===opt.key?'#E1F5EE':'#fff',
+                  color:inviteType===opt.key?'#0F6E56':'#666' }}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ display:'flex', gap:10, marginBottom:14 }}>
+            <div style={{ flex:1 }}>
+              <label className="form-label">Date</label>
+              <input className="form-input" type="date" value={inviteDate} onChange={e=>setInviteDate(e.target.value)} min={new Date().toISOString().split('T')[0]} />
+            </div>
+            <div style={{ flex:1 }}>
+              <label className="form-label">Time</label>
+              <input className="form-input" type="time" value={inviteTime} onChange={e=>setInviteTime(e.target.value)} />
+            </div>
+          </div>
+          {inviteType === 'phone' ? (
+            <div style={{ marginBottom:14 }}>
+              <label className="form-label">Phone number to call</label>
+              <input className="form-input" type="tel" placeholder="+65 9123 4567" value={invitePhone} onChange={e=>setInvitePhone(e.target.value)} />
+            </div>
+          ) : (
+            <div style={{ marginBottom:14 }}>
+              <label className="form-label">Meeting link</label>
+              <input className="form-input" type="url" placeholder="https://zoom.us/j/... or meet.google.com/..." value={inviteLink} onChange={e=>setInviteLink(e.target.value)} />
+              <p style={{ fontSize:11, color:'#aaa', marginTop:4 }}>Paste your Zoom, Teams or Google Meet link</p>
+            </div>
+          )}
+          <div style={{ marginBottom:18 }}>
+            <label className="form-label">Note to candidate <span style={{ fontWeight:400, color:'#aaa' }}>(optional)</span></label>
+            <textarea className="form-input" rows={2} placeholder="e.g. Looking forward to learning more about your experience..."
+              value={inviteNote} onChange={e=>setInviteNote(e.target.value)} style={{ resize:'none', fontSize:13 }} />
+          </div>
+          {inviteError && <p style={{ fontSize:12, color:'#D85A30', marginBottom:12 }}>{inviteError}</p>}
+          <div style={{ display:'flex', gap:10 }}>
+            <button className="btn btn-outline" style={{ flex:1 }} onClick={() => { setInviteModal(null); setInviteError('') }}>Cancel</button>
+            <button className="btn btn-primary" style={{ flex:2 }} onClick={sendInvite} disabled={sendingInvite}>
+              {sendingInvite ? 'Sending...' : '📅 Send calendar invite'}
+            </button>
+          </div>
+          <p style={{ fontSize:11, color:'#aaa', marginTop:10, textAlign:'center' }}>
+            Candidate receives email from noreply@hireitright.com with .ics calendar file
+          </p>
+        </div>
+      </div>
+    )}
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
         <div>
@@ -440,7 +625,7 @@ export default function EmployerDashboard() {
                       <div style={{ marginTop: 12, display: 'flex', gap: 6, alignItems: 'center' }}>
                         <span style={{ fontSize: 11, color: '#aaa' }}>Move to:</span>
                         {['reviewed', 'shortlisted', 'rejected'].map(s => (
-                          <button key={s} onClick={() => updateStatus(app.id, s)}
+                          <button key={s} onClick={() => s === 'shortlisted' ? setInviteModal({ app }) : updateStatus(app.id, s)}
                             className="btn btn-outline"
                             style={{
                               fontSize: 11, padding: '4px 10px',
@@ -461,5 +646,6 @@ export default function EmployerDashboard() {
         </div>
       )}
     </div>
+    </>
   )
 }
