@@ -274,7 +274,7 @@ export default function EmployerDashboard() {
         <div style={{ background:'#fff', borderRadius:16, maxWidth:460, width:'100%', padding:28 }}>
           <h3 style={{ fontSize:17, fontWeight:600, marginBottom:4 }}>Send interview invite</h3>
           <p style={{ fontSize:13, color:'#888', marginBottom:20 }}>
-            Inviting <strong>{inviteModal.app.profiles?.full_name}</strong> for <em>{selectedJob?.title}</em>
+            Inviting <strong>{inviteModal?.app?.profiles?.full_name || 'candidate'}</strong> for <em>{selectedJob?.title || 'this role'}</em>
           </p>
           <div style={{ display:'flex', gap:10, marginBottom:18 }}>
             {[{key:'phone',label:'📞 Phone discussion'},{key:'online',label:'💻 Online meeting'}].map(opt => (
@@ -625,7 +625,15 @@ export default function EmployerDashboard() {
                       <div style={{ marginTop: 12, display: 'flex', gap: 6, alignItems: 'center' }}>
                         <span style={{ fontSize: 11, color: '#aaa' }}>Move to:</span>
                         {['reviewed', 'shortlisted', 'rejected'].map(s => (
-                          <button key={s} onClick={() => s === 'shortlisted' ? setInviteModal({ app }) : updateStatus(app.id, s)}
+                          <button key={s} onClick={() => {
+                            console.log('Status click:', s, 'app:', app?.id)
+                            if (s === 'shortlisted') {
+                              setInviteModal({ app })
+                              console.log('Modal set for app:', app?.id)
+                            } else {
+                              updateStatus(app.id, s)
+                            }
+                          }}
                             className="btn btn-outline"
                             style={{
                               fontSize: 11, padding: '4px 10px',
