@@ -39,7 +39,9 @@ export default function EmployerDashboard() {
   const [inviteModal, setInviteModal] = useState(null) // { app } | null
   const [inviteType, setInviteType] = useState('phone') // 'phone' | 'online'
   const [inviteDate, setInviteDate] = useState('')
-  const [inviteTime, setInviteTime] = useState('')
+  const [inviteHour, setInviteHour] = useState('9')
+  const [inviteMinute, setInviteMinute] = useState('00')
+  const [invitePeriod, setInvitePeriod] = useState('AM')
   const [invitePhone, setInvitePhone] = useState('')
   const [inviteLink, setInviteLink] = useState('')
   const [inviteNote, setInviteNote] = useState('')
@@ -147,7 +149,7 @@ export default function EmployerDashboard() {
   }
 
   async function sendInvite() {
-    if (!inviteDate || !inviteTime) { setInviteError('Please select a date and time.'); return }
+    if (!inviteDate) { setInviteError('Please select a date.'); return }
     if (inviteType === 'phone' && !invitePhone.trim()) { setInviteError('Please enter a phone number.'); return }
     if (inviteType === 'online' && !inviteLink.trim()) { setInviteError('Please paste your meeting link.'); return }
 
@@ -159,10 +161,15 @@ export default function EmployerDashboard() {
     const companyName = profile.company_name || profile.full_name || 'the company'
 
     // Format date nicely
-    const dateObj = new Date(`${inviteDate}T${inviteTime}`)
+    let hour24 = parseInt(inviteHour)
+    if (invitePeriod === 'PM' && hour24 !== 12) hour24 += 12
+    if (invitePeriod === 'AM' && hour24 === 12) hour24 = 0
+    const timeStr24 = `${hour24.toString().padStart(2,'0')}:${inviteMinute}:00`
+    const displayTime = `${inviteHour}:${inviteMinute} ${invitePeriod}`
+    const dateObj = new Date(`${inviteDate}T${timeStr24}`)
     const endObj = new Date(dateObj.getTime() + 60 * 60 * 1000) // +1 hour
     const fmt = (d) => d.toISOString().replace(/[-:]/g,'').split('.')[0]
-    const dtstamp = fmt(new Date())
+    // dtstamp included inline
 
     const location = inviteType === 'phone'
       ? `Phone: ${invitePhone}`
@@ -181,7 +188,7 @@ export default function EmployerDashboard() {
       'METHOD:REQUEST',
       'BEGIN:VEVENT',
       `UID:${app.id}-${Date.now()}@hireitright.com`,
-      `DTSTAMP:${dtstamp}Z`,
+      `DTSTAMP:${fmt(new Date())}Z`,
       `DTSTART:${fmt(dateObj)}`,
       `DTEND:${fmt(endObj)}`,
       `SUMMARY:Interview: ${jobTitle} at ${companyName}`,
@@ -200,7 +207,6 @@ export default function EmployerDashboard() {
     ].join('\r\n')
 
     const dateFormatted = dateObj.toLocaleDateString('en-SG', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
-    const timeFormatted = dateObj.toLocaleTimeString('en-SG', { hour:'2-digit', minute:'2-digit' })
 
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto">
@@ -216,7 +222,7 @@ export default function EmployerDashboard() {
           <div style="background:white;border:1px solid #e0e0dc;border-radius:8px;padding:16px 20px;margin:20px 0">
             <p style="margin:0 0 8px;font-size:12px;color:#888;font-weight:500;letter-spacing:1px;text-transform:uppercase">Meeting details</p>
             <p style="margin:4px 0;font-size:14px;color:#1a1a1a">📅 <strong>${dateFormatted}</strong></p>
-            <p style="margin:4px 0;font-size:14px;color:#1a1a1a">🕐 <strong>${timeFormatted}</strong></p>
+            <p style="margin:4px 0;font-size:14px;color:#1a1a1a">🕐 <strong>${displayTime}</strong></p>
             <p style="margin:4px 0;font-size:14px;color:#1a1a1a">${inviteType === 'phone' ? `📞 Phone: <strong>${invitePhone}</strong>` : `💻 Meeting: <a href="${inviteLink}" style="color:#1D9E75">${inviteLink}</a>`}</p>
             ${inviteNote ? `<p style="margin:12px 0 0;font-size:13px;color:#666;border-top:1px solid #f0f0ee;padding-top:10px">${inviteNote}</p>` : ''}
           </div>
@@ -252,13 +258,25 @@ export default function EmployerDashboard() {
       userId: app.candidate_id,
       type: 'status_changed',
       title: `🎉 Interview invite from ${companyName}`,
-      body: `${inviteType === 'phone' ? 'Phone call' : 'Online meeting'} on ${dateFormatted} at ${timeFormatted}`,
+      body: `${inviteType === 'phone' ? 'Phone call' : 'Online meeting'} on ${dateFormatted} at ${displayTime}`,
       link: '/candidate',
     }).catch(() => {})
 
+    // Save interview details to application
+    await supabase.from('applications').update({
+      status: 'shortlisted',
+      interview_type: inviteType,
+      interview_date: inviteDate,
+      interview_time: displayTime,
+      interview_phone: invitePhone || null,
+      interview_link: inviteLink || null,
+      interview_note: inviteNote || null,
+    }).eq('id', inviteModal.app.id)
+
     setSendingInvite(false)
     setInviteModal(null)
-    setInviteDate(''); setInviteTime(''); setInvitePhone(''); setInviteLink(''); setInviteNote('')
+    setInviteDate(''); setInviteHour('9'); setInviteMinute('00'); setInvitePeriod('AM'); setInvitePhone(''); setInviteLink(''); setInviteNote('')
+    if (selectedJob) await loadApplications(selectedJob.id)
   }
 
   function pickJob(job) {
@@ -294,7 +312,18 @@ export default function EmployerDashboard() {
             </div>
             <div style={{ flex:1 }}>
               <label className="form-label">Time</label>
-              <input className="form-input" type="time" value={inviteTime} onChange={e=>setInviteTime(e.target.value)} />
+              <div style={{ display:'flex', gap:6 }}>
+                <select className="form-input" value={inviteHour} onChange={e=>setInviteHour(e.target.value)} style={{ flex:1, padding:'8px 6px' }}>
+                  {[1,2,3,4,5,6,7,8,9,10,11,12].map(h => <option key={h} value={h}>{h}</option>)}
+                </select>
+                <select className="form-input" value={inviteMinute} onChange={e=>setInviteMinute(e.target.value)} style={{ flex:1, padding:'8px 6px' }}>
+                  {['00','15','30','45'].map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+                <select className="form-input" value={invitePeriod} onChange={e=>setInvitePeriod(e.target.value)} style={{ flex:1, padding:'8px 6px' }}>
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+              </div>
             </div>
           </div>
           {inviteType === 'phone' ? (
@@ -624,6 +653,24 @@ export default function EmployerDashboard() {
 
                       <div style={{ marginTop: 12, display: 'flex', gap: 6, alignItems: 'center' }}>
                         <span style={{ fontSize: 11, color: '#aaa' }}>Move to:</span>
+                        {/* Meeting scheduled badge */}
+                        {app.interview_date && (
+                          <div style={{ width: '100%', marginBottom: 8, background: '#E1F5EE', borderRadius: 8, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 16 }}>{app.interview_type === 'phone' ? '📞' : '💻'}</span>
+                            <div>
+                              <p style={{ fontSize: 11, fontWeight: 600, color: '#0F6E56', margin: 0 }}>
+                                {app.interview_type === 'phone' ? 'Phone call' : 'Online meeting'} scheduled
+                              </p>
+                              <p style={{ fontSize: 11, color: '#0F6E56', margin: 0, opacity: 0.8 }}>
+                                {new Date(app.interview_date).toLocaleDateString('en-SG', { weekday:'short', day:'numeric', month:'short' })} · {app.interview_time}
+                              </p>
+                            </div>
+                            <button onClick={() => setInviteModal({ app })}
+                              style={{ marginLeft: 'auto', border: 'none', background: 'none', color: '#0F6E56', fontSize: 11, cursor: 'pointer', textDecoration: 'underline' }}>
+                              Update
+                            </button>
+                          </div>
+                        )}
                         {['reviewed', 'shortlisted', 'rejected'].map(s => (
                           <button key={s} onClick={() => {
                             console.log('Status click:', s, 'app:', app?.id)
