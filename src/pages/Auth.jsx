@@ -27,11 +27,13 @@ export default function Auth() {
     try {
       if (mode === 'login') {
         await signIn({ email, password })
+        setPassword('') // clear from memory
         navigate('/dashboard')
       } else {
         if (!fullName.trim()) throw new Error('Please enter your full name')
         if (role === 'employer' && !companyName.trim()) throw new Error('Please enter your company name')
         await signUp({ email, password, role, fullName: fullName.trim(), companyName: companyName.trim() })
+        setPassword('') // clear from memory
         navigate('/dashboard')
       }
     } catch (err) {
@@ -107,14 +109,18 @@ export default function Auth() {
           <div style={{ marginBottom: 12 }}>
             <label className="form-label">Email</label>
             <input className="form-input" type="email" placeholder="you@example.com" value={email}
-              onChange={e => setEmail(e.target.value)} required />
+              onChange={e => setEmail(e.target.value)} required
+              autoComplete="email"
+              name="email" />
           </div>
 
           <div style={{ marginBottom: 20 }}>
             <label className="form-label">Password</label>
             <input className="form-input" type="password"
               placeholder={mode === 'signup' ? 'At least 6 characters' : 'Your password'}
-              value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
+              value={password} onChange={e => setPassword(e.target.value)} required minLength={6}
+              autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+              name="password" />
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
