@@ -144,8 +144,8 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
             Max {Math.floor(maxSeconds / 60)} min · Stored securely · Domain-locked
           </p>
           <div style={{ display: 'flex', gap: 8 }}>
-            {onCancel && <button className="btn btn-outline" style={{ flex: 1 }} onClick={onCancel}>Cancel</button>}
-            <button className="btn btn-primary" style={{ flex: 2 }} onClick={startCamera}>
+            {onCancel && <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={onCancel}>Cancel</button>}
+            <button type="button" className="btn btn-primary" style={{ flex: 2 }} onClick={startCamera}>
               Open camera
             </button>
           </div>
@@ -174,7 +174,7 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
             style={{ width: '100%', borderRadius: 8, background: '#000', maxHeight: 220, objectFit: 'cover', display: 'block' }} />
           <div style={{ display: 'flex', gap: 10, marginTop: 10, alignItems: 'center' }}>
             {state === 'ready' && (
-              <button className="btn btn-primary" style={{ flex: 1, padding: 11 }} onClick={startRecording}>
+              <button type="button" className="btn btn-primary" style={{ flex: 1, padding: 11 }} onClick={startRecording}>
                 ● Start recording
               </button>
             )}
@@ -187,7 +187,7 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
                     {fmt(countdown)} {countdown <= 10 ? '⚠️' : 'left'}
                   </span>
                 </div>
-                <button className="btn btn-outline"
+                <button type="button" className="btn btn-outline"
                   style={{ padding: '8px 16px', color: '#D85A30', borderColor: '#D85A30' }}
                   onClick={stopRecording}>
                   ■ Stop
@@ -217,12 +217,12 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
             controls playsInline
             style={{ width: '100%', borderRadius: 8, background: '#000', maxHeight: 220, display: 'block' }} />
           <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-            <button className="btn btn-outline" style={{ flex: 1 }} onClick={reRecord}>↺ Re-record</button>
-            <button className="btn btn-outline" style={{ flex: 1 }}
+            <button type="button" className="btn btn-outline" style={{ flex: 1 }} onClick={reRecord}>↺ Re-record</button>
+            <button type="button" className="btn btn-outline" style={{ flex: 1 }}
               onClick={() => { if (previewRef.current) { previewRef.current.currentTime = 0; previewRef.current.play() } }}>
               ▶ Replay
             </button>
-            <button className="btn btn-primary" style={{ flex: 2 }} onClick={uploadVideo}>
+            <button type="button" className="btn btn-primary" style={{ flex: 2 }} onClick={uploadVideo}>
               ✓ Use this video
             </button>
           </div>
@@ -251,7 +251,7 @@ export default function VideoRecorder({ onVideoRecorded, onCancel, maxSeconds = 
             <p style={{ fontSize: 13, fontWeight: 500, color: '#0F6E56' }}>Video uploaded securely</p>
             <p style={{ fontSize: 11, color: '#888' }}>Cloudflare Stream · Domain-locked · Signed URL</p>
           </div>
-          <button onClick={reRecord}
+          <button type="button" onClick={reRecord}
             style={{ border: 'none', background: 'none', color: '#888', fontSize: 12, cursor: 'pointer' }}>
             Re-record
           </button>
