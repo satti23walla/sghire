@@ -48,20 +48,20 @@ export function AuthProvider({ children }) {
   }
 
   async function signUp({ email, password, role, fullName, companyName }) {
-    const { data, error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          role,
+          full_name: fullName,
+          company_name: role === 'employer' ? companyName : '',
+        }
+      }
+    })
     if (error) throw error
-    if (data.user) {
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: data.user.id,
-        email,
-        role,
-        full_name: fullName,
-        company_name: role === 'employer' ? companyName : null,
-      })
-      if (profileError) throw profileError
-      // Fetch profile immediately after INSERT so it's ready before navigation
-      await fetchProfile(data.user.id)
-    }
+    // Profile is created automatically by database trigger (handle_new_user)
+    // No manual INSERT needed — trigger runs as SECURITY DEFINER, bypasses RLS
     return data
   }
 
