@@ -63,10 +63,14 @@ export default function Auth() {
   }
 
   function handleOtpPaste(e) {
+    e.preventDefault()
     const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 8)
-    if (text.length === 6) {
-      setOtp(text.split(''))
-      otpRefs.current[5]?.focus()
+    if (text.length > 0) {
+      const next = Array(8).fill('')
+      text.split('').forEach((digit, i) => { if (i < 8) next[i] = digit })
+      setOtp(next)
+      const lastFilled = Math.min(text.length, 7)
+      otpRefs.current[lastFilled]?.focus()
     }
   }
 
@@ -144,6 +148,7 @@ export default function Auth() {
                 value={digit}
                 onChange={e => handleOtpChange(i, e.target.value)}
                 onKeyDown={e => handleOtpKeyDown(i, e)}
+                onPaste={handleOtpPaste}
                 autoFocus={i === 0}
                 style={{
                   width: 44, height: 52, textAlign: 'center',
