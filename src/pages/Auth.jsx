@@ -13,7 +13,7 @@ export default function Auth() {
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [companyName, setCompanyName] = useState('')
-  const [otp, setOtp] = useState(['', '', '', '', '', ''])
+  const [otp, setOtp] = useState(['', '', '', '', '', '', '', ''])
   const [loading, setLoading] = useState(false)
   const [resending, setResending] = useState(false)
   const [error, setError] = useState('')
@@ -53,7 +53,7 @@ export default function Auth() {
     const next = [...otp]
     next[i] = val.slice(-1)
     setOtp(next)
-    if (val && i < 5) otpRefs.current[i + 1]?.focus()
+    if (val && i < 7) otpRefs.current[i + 1]?.focus()
   }
 
   function handleOtpKeyDown(i, e) {
@@ -63,7 +63,7 @@ export default function Auth() {
   }
 
   function handleOtpPaste(e) {
-    const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 8)
     if (text.length === 6) {
       setOtp(text.split(''))
       otpRefs.current[5]?.focus()
@@ -73,7 +73,7 @@ export default function Auth() {
   async function handleVerifyOtp(e) {
     e.preventDefault()
     const token = otp.join('')
-    if (token.length !== 6) { setError('Please enter the 6-digit code'); return }
+    if (token.length !== 8) { setError('Please enter the 8-digit code'); return }
     setLoading(true); setError('')
     try {
       const { error: verifyErr } = await supabase.auth.verifyOtp({
@@ -99,7 +99,7 @@ export default function Auth() {
       })
       if (resendErr) throw resendErr
       setSuccess('A new code has been sent to your email.')
-      setOtp(['', '', '', '', '', ''])
+      setOtp(['', '', '', '', '', '', '', ''])
       otpRefs.current[0]?.focus()
     } catch (err) {
       setError(err.message || 'Could not resend code')
@@ -115,7 +115,7 @@ export default function Auth() {
         <div style={{ fontSize: 48, marginBottom: 12 }}>📧</div>
         <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 6 }}>Check your email</h2>
         <p style={{ fontSize: 13, color: '#666', marginBottom: 6, lineHeight: 1.6 }}>
-          We sent a 6-digit verification code to
+          We sent a 8-digit verification code to
         </p>
         <p style={{ fontSize: 14, fontWeight: 500, color: '#1D9E75', marginBottom: 24 }}>{email}</p>
 
@@ -131,7 +131,7 @@ export default function Auth() {
         )}
 
         <form onSubmit={handleVerifyOtp}>
-          {/* 6-digit OTP boxes */}
+          {/* 8-digit OTP boxes */}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 24 }}
             onPaste={handleOtpPaste}>
             {otp.map((digit, i) => (
@@ -158,7 +158,7 @@ export default function Auth() {
             ))}
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', fontSize: 15, padding: 13 }} disabled={loading || otp.join('').length !== 6}>
+          <button type="submit" className="btn btn-primary" style={{ width: '100%', fontSize: 15, padding: 13 }} disabled={loading || otp.join('').length !== 8}>
             {loading ? 'Verifying...' : 'Verify email →'}
           </button>
         </form>
