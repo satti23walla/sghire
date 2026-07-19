@@ -88,6 +88,7 @@ export default function EmployerProfileView() {
               <p style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>Hiring manager: {employer.full_name}</p>
             )}
             {employer.location && <p style={{ fontSize: 13, color: '#888' }}>📍 {employer.location}</p>}
+            {employer.industry && <p style={{ fontSize: 13, color: '#888' }}>🏭 {employer.industry}</p>}
           </div>
         </div>
 

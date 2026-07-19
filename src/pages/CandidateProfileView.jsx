@@ -123,6 +123,7 @@ export default function CandidateProfileView() {
             {candidate.headline && <p style={{ fontSize: 14, color: '#555', marginBottom: 6 }}>{candidate.headline}</p>}
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               {candidate.location && <p style={{ fontSize: 13, color: '#888' }}>📍 {candidate.location}</p>}
+              {candidate.industry && <p style={{ fontSize: 13, color: '#888' }}>🏢 {candidate.industry}</p>}
               {candidate.email && <p style={{ fontSize: 13, color: '#888' }}>✉️ {candidate.email}</p>}
             </div>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 6 }}>

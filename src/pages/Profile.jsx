@@ -3,6 +3,24 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import VideoRecorder from '../components/VideoRecorder'
 
+const INDUSTRIES = [
+  'Technology & Software',
+  'Financial Services & FinTech',
+  'Telecommunications',
+  'Healthcare & Life Sciences',
+  'Manufacturing & Industrial',
+  'Shipping, Logistics & Supply Chain',
+  'Government & Public Sector',
+  'Energy & Environment',
+  'Real Estate & Construction',
+  'Retail & E-commerce',
+  'Media, Marketing & Creative',
+  'Professional Services & Consulting',
+  'Education & Research',
+  'Hospitality, Travel & Tourism',
+  'Other',
+]
+
 const PORTFOLIO_TYPES = [
   { key: 'project',  icon: '💼', label: 'Project' },
   { key: 'website',  icon: '🌐', label: 'Website' },
@@ -21,6 +39,7 @@ export default function Profile() {
   const [companyName, setCompanyName] = useState('')
   const [companyUrl, setCompanyUrl] = useState('')
   const [meetTeamUrl, setMeetTeamUrl] = useState('')
+  const [industry, setIndustry] = useState('')
   const [linkedinUrl, setLinkedinUrl] = useState('')
   const [introVideoUrl, setIntroVideoUrl] = useState('')
   const [cloudflareIntroId, setCloudflareIntroId] = useState('')
@@ -52,6 +71,7 @@ export default function Profile() {
       setCompanyName(profile.company_name || '')
       setCompanyUrl(profile.company_url || '')
       setMeetTeamUrl(profile.meet_team_url || '')
+      setIndustry(profile.industry || '')
       setLinkedinUrl(profile.linkedin_url || '')
       setIntroVideoUrl(profile.intro_video_url || '')
       setCloudflareIntroId(profile.cloudflare_intro_video_id || '')
@@ -156,6 +176,7 @@ export default function Profile() {
         p_company_name: companyName || null,
         p_company_url: companyUrl || null,
         p_meet_team_url: meetTeamUrl || null,
+        p_industry: industry || null,
         p_linkedin_url: linkedinUrl || null,
         p_intro_video_url: introVideoUrl || null,
         p_cloudflare_intro_video_id: cloudflareIntroId || null,
@@ -245,6 +266,13 @@ export default function Profile() {
                   value={headline} onChange={e => setHeadline(e.target.value)} />
               </div>
               <div style={{ marginBottom: 12 }}>
+                <label className="form-label">Industry</label>
+                <select className="form-input" value={industry} onChange={e => setIndustry(e.target.value)} style={{ background: '#fff' }}>
+                  <option value="">Select your industry</option>
+                  {INDUSTRIES.map(ind => <option key={ind} value={ind}>{ind}</option>)}
+                </select>
+              </div>
+              <div style={{ marginBottom: 12 }}>
                 <label className="form-label">Skills <span style={{ color: '#888', fontWeight: 400 }}>(comma-separated)</span></label>
                 <input className="form-input" type="text"
                   placeholder="e.g. Python, SQL, Tableau, Power BI"
@@ -256,6 +284,13 @@ export default function Profile() {
               <div style={{ marginBottom: 12 }}>
                 <label className="form-label">Company name</label>
                 <input className="form-input" type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} />
+              </div>
+              <div style={{ marginBottom: 12 }}>
+                <label className="form-label">Industry</label>
+                <select className="form-input" value={industry} onChange={e => setIndustry(e.target.value)} style={{ background: '#fff' }}>
+                  <option value="">Select your industry</option>
+                  {INDUSTRIES.map(ind => <option key={ind} value={ind}>{ind}</option>)}
+                </select>
               </div>
               <div style={{ marginBottom: 12 }}>
                 <label className="form-label">Company website / LinkedIn company page</label>
