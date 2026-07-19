@@ -293,7 +293,7 @@ export default function Profile() {
               <div style={{ marginBottom: 12 }}>
                 <label className="form-label">Skills <span style={{ color: '#888', fontWeight: 400 }}>(comma-separated)</span></label>
                 <input className="form-input" type="text"
-                  placeholder="e.g. Python, SQL, Tableau, Power BI"
+                  placeholder="Add your skills or select from suggestions below"
                   value={skills} onChange={e => setSkills(e.target.value)} />
                 {/* Industry-specific skill suggestions */}
                 {industry && INDUSTRY_SKILLS[industry] && (
