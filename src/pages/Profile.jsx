@@ -3,6 +3,24 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import VideoRecorder from '../components/VideoRecorder'
 
+const INDUSTRY_SKILLS = {
+  'Technology & Software': ['Python', 'JavaScript', 'React', 'Node.js', 'AWS', 'SQL', 'Java', 'DevOps', 'Kubernetes', 'Machine Learning', 'TypeScript', 'CI/CD', 'System Design', 'Agile'],
+  'Financial Services & FinTech': ['Financial Modelling', 'Risk Management', 'Bloomberg', 'Compliance', 'AML', 'Trading', 'Excel', 'Python', 'Regulatory Reporting', 'Credit Analysis', 'Treasury', 'Derivatives', 'KYC', 'Wealth Management'],
+  'Telecommunications': ['Network Engineering', '5G', 'MPLS', 'VoIP', 'SD-WAN', 'ZTNA', 'Cisco', 'Network Security', 'OSS/BSS', 'LTE', 'Fibre', 'Managed Services', 'SASE', 'SLA Management'],
+  'Healthcare & Life Sciences': ['Clinical Research', 'Regulatory Affairs', 'GMP', 'Medical Devices', 'Pharmacovigilance', 'EMR Systems', 'Healthcare IT', 'Patient Management', 'Clinical Trials', 'HIPAA', 'Lab Management', 'Medical Coding'],
+  'Manufacturing & Industrial': ['Lean Manufacturing', 'Six Sigma', 'AutoCAD', 'Quality Control', 'Supply Planning', 'ERP', 'SAP', 'Production Planning', 'ISO Standards', 'Kaizen', 'Procurement', 'PLC Programming', 'SCADA'],
+  'Shipping, Logistics & Supply Chain': ['Freight Management', 'Customs & Trade', 'SAP TM', 'Incoterms', 'Last Mile Delivery', 'Warehouse Management', 'Fleet Management', 'Sea Freight', 'Air Freight', 'Port Operations', 'SCM', 'NVOCC', 'Bill of Lading'],
+  'Government & Public Sector': ['Policy Analysis', 'Public Administration', 'Stakeholder Engagement', 'Procurement', 'Budget Management', 'GovTech', 'Smart City', 'Regulatory Compliance', 'Programme Management', 'Parliamentary Procedures', 'Grant Management'],
+  'Energy & Environment': ['Oil & Gas', 'Renewable Energy', 'Solar PV', 'Energy Auditing', 'HSE', 'FEED', 'Environmental Impact Assessment', 'Carbon Management', 'ESG Reporting', 'Grid Management', 'Energy Trading', 'SCADA', 'Wind Energy'],
+  'Real Estate & Construction': ['Property Valuation', 'AutoCAD', 'BIM', 'Project Management', 'Quantity Surveying', 'Tenancy Management', 'Real Estate Law', 'RICS', 'Building Inspection', 'Green Mark', 'Facilities Management', 'Leasing'],
+  'Retail & E-commerce': ['Category Management', 'Merchandising', 'Shopify', 'Inventory Management', 'Customer Experience', 'Digital Marketing', 'Omnichannel', 'POS Systems', 'Buyer', 'Visual Merchandising', 'Amazon Seller', 'Growth Hacking'],
+  'Media, Marketing & Creative': ['Content Marketing', 'SEO/SEM', 'Social Media', 'Copywriting', 'Adobe Creative Suite', 'Brand Management', 'Google Ads', 'Video Production', 'PR', 'Campaign Management', 'Influencer Marketing', 'Analytics'],
+  'Professional Services & Consulting': ['Management Consulting', 'Business Analysis', 'Change Management', 'Process Improvement', 'Client Management', 'Data Analysis', 'Presentations', 'Proposal Writing', 'Due Diligence', 'Strategy', 'PMO'],
+  'Education & Research': ['Curriculum Development', 'E-learning', 'Research Methodology', 'Data Analysis', 'Academic Writing', 'Instructional Design', 'Student Management', 'STEM', 'Grant Writing', 'Learning Management Systems', 'Assessment Design'],
+  'Hospitality, Travel & Tourism': ['Revenue Management', 'Hotel Operations', 'F&B Management', 'Customer Service', 'Property Management Systems', 'Tour Operations', 'MICE', 'Front Office', 'Travel Agency', 'Yield Management', 'GDS'],
+  'Other': ['Communication', 'Project Management', 'Microsoft Office', 'Stakeholder Management', 'Problem Solving', 'Leadership', 'Data Analysis', 'Customer Service', 'Budget Management'],
+}
+
 const INDUSTRIES = [
   'Technology & Software',
   'Financial Services & FinTech',
@@ -277,6 +295,30 @@ export default function Profile() {
                 <input className="form-input" type="text"
                   placeholder="e.g. Python, SQL, Tableau, Power BI"
                   value={skills} onChange={e => setSkills(e.target.value)} />
+                {/* Industry-specific skill suggestions */}
+                {industry && INDUSTRY_SKILLS[industry] && (
+                  <div style={{ marginTop: 8 }}>
+                    <p style={{ fontSize: 11, color: '#888', marginBottom: 6 }}>Suggested for {industry}:</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                      {INDUSTRY_SKILLS[industry]
+                        .filter(s => !skills.toLowerCase().includes(s.toLowerCase()))
+                        .map(s => (
+                          <button key={s} type="button"
+                            onClick={() => setSkills(prev => prev ? `${prev}, ${s}` : s)}
+                            style={{
+                              fontSize: 11, padding: '3px 10px', borderRadius: 20, cursor: 'pointer',
+                              border: '1px solid #e0e0dc', background: '#f9f9f7', color: '#555',
+                              transition: 'all 0.15s',
+                            }}
+                            onMouseOver={e => { e.target.style.background = '#E1F5EE'; e.target.style.borderColor = '#1D9E75'; e.target.style.color = '#0F6E56' }}
+                            onMouseOut={e => { e.target.style.background = '#f9f9f7'; e.target.style.borderColor = '#e0e0dc'; e.target.style.color = '#555' }}>
+                            + {s}
+                          </button>
+                        ))
+                      }
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           ) : (
