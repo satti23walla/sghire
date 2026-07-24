@@ -10,6 +10,7 @@ import Profile from './pages/Profile'
 import CandidateProfileView from './pages/CandidateProfileView'
 import EmployerProfileView from './pages/EmployerProfileView'
 import Notifications from './pages/Notifications'
+import Terms from './pages/Terms'
 import { useAuth } from './contexts/AuthContext'
 
 function ProtectedRoute({ children, requiredRole }) {
@@ -80,6 +81,7 @@ export default function App() {
               <CandidateProfileView />
             </ProtectedRoute>
           } />
+          <Route path="/terms" element={<Terms />} />
         </Routes>
       </main>
     </div>

@@ -132,6 +132,15 @@ export default function Landing() {
           </div>
         ))}
       </div>
+
+      {/* Footer */}
+      <div style={{ borderTop: '0.5px solid #efefed', padding: '16px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        <p style={{ fontSize: 11, color: '#bbb' }}>© 2026 HireItRight · Making hiring human.</p>
+        <div style={{ display: 'flex', gap: 20 }}>
+          <a href="/terms" style={{ fontSize: 11, color: '#888', textDecoration: 'none' }}>Terms & Conditions</a>
+          <a href="mailto:hello@hireitright.com" style={{ fontSize: 11, color: '#888', textDecoration: 'none' }}>Contact</a>
+        </div>
+      </div>
     </div>
   )
 }
