@@ -138,7 +138,9 @@ export default function Landing() {
         <p style={{ fontSize: 11, color: '#bbb' }}>© 2026 HireItRight · Making hiring human.</p>
         <div style={{ display: 'flex', gap: 20 }}>
           <a href="/terms" style={{ fontSize: 11, color: '#888', textDecoration: 'none' }}>Terms & Conditions</a>
+          <a href="/privacy" style={{ fontSize: 11, color: '#888', textDecoration: 'none' }}>Privacy Policy</a>
           <a href="mailto:hello@hireitright.com" style={{ fontSize: 11, color: '#888', textDecoration: 'none' }}>Contact</a>
+          <a href="mailto:dpo@hireitright.com" style={{ fontSize: 11, color: '#888', textDecoration: 'none' }}>DPO</a>
         </div>
       </div>
     </div>

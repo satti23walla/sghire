@@ -272,7 +272,9 @@ export default function Auth() {
 
       {mode === 'signup' && (
         <p style={{ fontSize: 12, color: '#888', textAlign: 'center', marginTop: 12 }}>
-          By creating an account you agree to our <a href="/terms" style={{ color: '#1D9E75' }}>Terms & Conditions</a>.
+          By creating an account you agree to our{' '}
+          <a href="/terms" style={{ color: '#1D9E75' }}>Terms & Conditions</a> and{' '}
+          <a href="/privacy" style={{ color: '#1D9E75' }}>Privacy Policy</a>.
         </p>
       )}
     </div>

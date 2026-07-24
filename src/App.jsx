@@ -11,6 +11,8 @@ import CandidateProfileView from './pages/CandidateProfileView'
 import EmployerProfileView from './pages/EmployerProfileView'
 import Notifications from './pages/Notifications'
 import Terms from './pages/Terms'
+import Privacy from './pages/Privacy'
+import CookieBanner from './components/CookieBanner'
 import { useAuth } from './contexts/AuthContext'
 
 function ProtectedRoute({ children, requiredRole }) {
@@ -82,8 +84,10 @@ export default function App() {
             </ProtectedRoute>
           } />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
         </Routes>
       </main>
+      <CookieBanner />
     </div>
   )
 }

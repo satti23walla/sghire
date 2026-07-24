@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import AvatarImage from '../components/AvatarImage'
+import DeleteAccount from '../components/DeleteAccount'
 import VideoPlayer from '../components/VideoPlayer'
 import { notify } from '../lib/notifications'
 
@@ -370,6 +371,8 @@ export default function EmployerDashboard() {
           Edit profile
         </button>
       </div>
+
+      {tab === 'jobs' && jobs.length === 0 && <DeleteAccount />}
 
       <div className="subtabs">
         {['jobs', 'applications'].map(t => (
