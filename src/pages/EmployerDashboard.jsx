@@ -372,8 +372,6 @@ export default function EmployerDashboard() {
         </button>
       </div>
 
-      {tab === 'jobs' && jobs.length === 0 && <DeleteAccount />}
-
       <div className="subtabs">
         {['jobs', 'applications'].map(t => (
           <button key={t} className={`subtab${tab === t ? ' active' : ''}`}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import VideoRecorder from '../components/VideoRecorder'
+import DeleteAccount from '../components/DeleteAccount'
 
 const INDUSTRY_SKILLS = {
   'Technology & Software': ['Python', 'JavaScript', 'React', 'Node.js', 'AWS', 'SQL', 'Java', 'DevOps', 'Kubernetes', 'Machine Learning', 'TypeScript', 'CI/CD', 'System Design', 'Agile'],
@@ -505,6 +506,12 @@ export default function Profile() {
             {saving ? 'Saving...' : 'Save changes'}
           </button>
         </form>
+
+        {/* Account Settings */}
+        <div style={{ marginTop: 32, borderTop: '1px solid #f0f0ee', paddingTop: 24 }}>
+          <h3 style={{ fontSize: 14, fontWeight: 600, color: '#888', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 16 }}>Account Settings</h3>
+          <DeleteAccount />
+        </div>
       </div>
 
       {/* Portfolio — candidates only */}
