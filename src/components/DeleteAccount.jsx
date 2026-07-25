@@ -15,15 +15,14 @@ export default function DeleteAccount() {
     try {
       // Call Edge Function — handles Cloudflare video deletion + auth user removal
       const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`
-      const { data: { session } } = await supabase.auth.getSession()
 
       const res = await fetch(fnUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${session?.access_token}`,
         },
+        body: JSON.stringify({ userId: user.id }),
       })
 
       const result = await res.json()
