@@ -64,14 +64,25 @@ export default function Privacy() {
         <p style={p}>We share your personal data with the following third-party service providers who process data on our behalf. Each has entered into or operates under a Data Processing Agreement:</p>
         <Table rows={[
           ['Supabase Inc.', 'Database, authentication and file storage', 'Singapore region'],
-          ['Cloudflare Inc.', 'Video storage and delivery (Cloudflare Stream)', 'United States'],
+          ['Cloudflare Inc. (Stream)', 'Video storage, encoding and delivery. Processes video content uploaded by users including facial images and voice. Videos stored in the United States. Retained until deleted by user or account closure.', 'United States — SCCs apply'],
           ['Resend Inc.', 'Transactional email delivery', 'United States'],
           ['Vercel Inc.', 'Website hosting and deployment', 'United States'],
         ]} headers={['Provider', 'Purpose', 'Location']} />
         <p style={{ ...p, marginTop: 12 }}>For transfers to providers in the United States, we rely on contractual safeguards (Standard Contractual Clauses or equivalent) to ensure adequate protection of your personal data. We do not sell your personal data to any third party.</p>
       </Section>
 
-      <Section title="7. Data Retention">
+      <Section title="7. Video Data — Special Considerations">
+        <p style={p}>HireItRight collects and processes video recordings which may contain biometric data including facial images and voice recordings. By recording and uploading a video on the Platform you explicitly consent to:</p>
+        <ul style={ul}>
+          <li>Your video being stored on Cloudflare Stream servers located in the United States</li>
+          <li>Your video being accessible to employers whose job listings you have applied to, or to candidates who have applied to your roles (depending on your role)</li>
+          <li>Your video being retained until you delete your account or request deletion</li>
+        </ul>
+        <p style={p}>You may control video visibility at any time in your profile settings (Public / With applications / Private). Setting your video to Private removes it from all employer views immediately.</p>
+        <p style={p}>To request deletion of your video data, use the Delete Account feature in your dashboard or contact us at <a href="mailto:hireitrightdpo@gmail.com" style={{ color: '#1D9E75' }}>hireitrightdpo@gmail.com</a>. Videos will be removed from Cloudflare Stream within 30 days of a deletion request.</p>
+      </Section>
+
+      <Section title="9. Privacy and Data Protection">
         <p style={p}>We retain your personal data for as long as your account is active or as needed to provide the Platform. Specifically:</p>
         <ul style={ul}>
           <li><strong>Account and profile data:</strong> Retained until you delete your account</li>
