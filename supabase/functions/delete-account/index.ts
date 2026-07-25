@@ -31,7 +31,7 @@ serve(async (req) => {
     // Admin client (service role) for privileged operations
     const adminClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      Deno.env.get('SERVICE_ROLE_KEY')!
     )
 
     // 1. Get all Cloudflare video IDs for this user
