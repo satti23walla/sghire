@@ -115,7 +115,9 @@ export default function Terms() {
         <div style={{ background: '#f9f9f7', borderRadius: 10, padding: '14px 18px', marginTop: 12, border: '0.5px solid #e0e0dc' }}>
           <p style={{ margin: 0, fontSize: 14, color: '#444', lineHeight: 1.8 }}>
             <strong>HireItRight</strong><br />
-            Email: hello@hireitright.com<br />
+            Email: <a href="mailto:admin@hireitright.com" style={{ color: '#1D9E75' }}>admin@hireitright.com</a><br />
+            DPO: <a href="mailto:hireitrightdpo@gmail.com" style={{ color: '#1D9E75' }}>hireitrightdpo@gmail.com</a><br />
+            Phone: <a href="tel:+6584347642" style={{ color: '#1D9E75' }}>+65 8434 7642</a><br />
             Website: hireitright.com<br />
             Singapore
           </p>

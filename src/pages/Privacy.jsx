@@ -14,7 +14,7 @@ export default function Privacy() {
           <p style={{ margin: 0, fontSize: 14, color: '#444', lineHeight: 1.8 }}>
             <strong>Data Protection Officer</strong><br />
             HireItRight<br />
-            Email: <a href="mailto:dpo@hireitright.com" style={{ color: '#1D9E75' }}>dpo@hireitright.com</a><br />
+            Email: <a href="mailto:hireitrightdpo@gmail.com" style={{ color: '#1D9E75' }}>hireitrightdpo@gmail.com</a><br />
             Website: hireitright.com
           </p>
         </div>
@@ -129,7 +129,7 @@ export default function Privacy() {
       </Section>
 
       <Section title="14. Contact and Complaints">
-        <p style={p}>For any questions, concerns or requests relating to this Privacy Policy or your personal data, contact our DPO at <a href="mailto:dpo@hireitright.com" style={{ color: '#1D9E75' }}>dpo@hireitright.com</a>.</p>
+        <p style={p}>For any questions, concerns or requests relating to this Privacy Policy or your personal data, contact our DPO at <a href="mailto:hireitrightdpo@gmail.com" style={{ color: '#1D9E75' }}>hireitrightdpo@gmail.com</a>.</p>
         <p style={p}>If you are not satisfied with our response, you have the right to lodge a complaint with the Personal Data Protection Commission (PDPC) at <a href="https://www.pdpc.gov.sg" target="_blank" rel="noreferrer" style={{ color: '#1D9E75' }}>pdpc.gov.sg</a>.</p>
       </Section>
     </div>

@@ -96,7 +96,7 @@ export default function DeleteAccount() {
       )}
 
       <p style={{ fontSize: 11, color: '#aaa', marginTop: 10 }}>
-        For data-related requests, contact <a href="mailto:dpo@hireitright.com" style={{ color: '#1D9E75' }}>dpo@hireitright.com</a>
+        For data-related requests, contact <a href="mailto:hireitrightdpo@gmail.com" style={{ color: '#1D9E75' }}>hireitrightdpo@gmail.com</a>
       </p>
     </div>
   )
