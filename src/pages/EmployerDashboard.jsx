@@ -616,13 +616,7 @@ export default function EmployerDashboard() {
                             LinkedIn ↗
                           </a>
                         )}
-                        {app.profiles?.intro_video_url && (
-                          <a href={app.profiles.intro_video_url} target="_blank" rel="noreferrer"
-                            style={{ fontSize: 12, color: '#0F6E56', textDecoration: 'none', background: '#E1F5EE', padding: '4px 10px', borderRadius: 20, fontWeight: 500 }}>
-                            🎥 Intro video ↗
-                          </a>
-                        )}
-                        {(app.profiles?.intro_video_url || app.profiles?.cloudflare_intro_video_id) && ['public', 'applications'].includes(app.profiles?.video_visibility) && (
+                        {(app.profiles?.intro_video_url || app.profiles?.cloudflare_intro_video_id) && app.profiles?.video_visibility !== 'private' && (
                           <div key="intro" style={{ marginBottom: 8 }}>
                             <VideoPlayer
                               cloudflareVideoId={app.profiles.cloudflare_intro_video_id}
