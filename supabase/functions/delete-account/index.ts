@@ -37,9 +37,15 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) return json({ error: 'Not authenticated' }, 401)
 
+    // Supabase normally injects SUPABASE_ANON_KEY automatically, but this
+    // project had trouble with the auto-injected service role var, so fall
+    // back to a manually-set ANON_KEY secret if it is missing.
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? Deno.env.get('ANON_KEY')
+    if (!anonKey) return json({ error: 'Server misconfigured: no anon key' }, 500)
+
     const userClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
+      anonKey,
       { global: { headers: { Authorization: authHeader } } }
     )
 
