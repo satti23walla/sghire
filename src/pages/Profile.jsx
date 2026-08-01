@@ -64,7 +64,8 @@ export default function Profile() {
   const [cloudflareIntroId, setCloudflareIntroId] = useState('')
   const [introInputMode, setIntroInputMode] = useState('url') // 'url' | 'record'
   const [videoVisibility, setVideoVisibility] = useState('applications')
-  const [avatarUrl, setAvatarUrl] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState('')      // storage path — what we persist
+  const [avatarPreview, setAvatarPreview] = useState('') // signed URL — display only
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [avatarError, setAvatarError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -99,6 +100,18 @@ export default function Profile() {
       if (profile.role === 'candidate') loadPortfolio()
     }
   }, [profile?.id])
+
+  // avatar_url stores a storage PATH, not a URL. Signed URLs expire after an
+  // hour, so we regenerate one for display whenever the path changes and never
+  // write the signed URL back to the database.
+  useEffect(() => {
+    let cancelled = false
+    if (!avatarUrl) { setAvatarPreview(''); return }
+    if (avatarUrl.startsWith('http')) { setAvatarPreview(avatarUrl); return } // legacy rows
+    supabase.storage.from('Avatars').createSignedUrl(avatarUrl, 3600)
+      .then(({ data }) => { if (!cancelled) setAvatarPreview(data?.signedUrl || '') })
+    return () => { cancelled = true }
+  }, [avatarUrl])
 
   async function loadPortfolio() {
     setLoadingPortfolio(true)
@@ -143,10 +156,7 @@ export default function Profile() {
 
       if (uploadErr) throw uploadErr
 
-      // Generate signed URL for immediate preview (1 hour)
-      const { data: signed } = await supabase.storage
-        .from('Avatars').createSignedUrl(filePath, 3600)
-      if (signed?.signedUrl) setAvatarUrl(signed.signedUrl)
+      setAvatarUrl(filePath)
 
       // Save file PATH to profile (not URL) — signed URLs generated on display
       await supabase.rpc('update_my_profile', {
@@ -468,8 +478,8 @@ export default function Profile() {
                 <label className="form-label">Profile photo</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginTop: 6 }}>
                   <div style={{ position: 'relative', flexShrink: 0 }}>
-                    {avatarUrl ? (
-                      <img src={avatarUrl.startsWith('http') ? avatarUrl + '?v=1' : avatarUrl} alt="Profile"
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="Profile"
                         style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid #e0e0dc' }} />
                     ) : (
                       <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#EEEDFE', color: '#534AB7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 600 }}>

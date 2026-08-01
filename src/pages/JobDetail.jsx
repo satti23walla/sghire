@@ -343,7 +343,6 @@ export default function JobDetail() {
                     value={responseVideo} onChange={e => setResponseVideo(e.target.value)} />
               )}
             </div>
-            )}
 
             {/* Profile preview */}
             {(profile?.headline || profile?.skills) && (
