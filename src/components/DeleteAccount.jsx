@@ -37,7 +37,9 @@ export default function DeleteAccount() {
       setPartial(result.complete === false)
 
       // Sign out locally
-      await supabase.auth.signOut()
+      // Local-only sign out. The auth user is already deleted server-side,
+      // so a normal signOut() would POST to /auth/v1/logout and 403.
+      await supabase.auth.signOut({ scope: 'local' }).catch(() => {})
       setStep('done')
       if (result.complete !== false) setTimeout(() => navigate('/'), 2000)
 
