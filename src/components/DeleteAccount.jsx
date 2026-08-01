@@ -8,12 +8,18 @@ export default function DeleteAccount() {
   const navigate = useNavigate()
   const [step, setStep] = useState('idle')
   const [error, setError] = useState('')
+  const [partial, setPartial] = useState(false)
 
   async function handleDelete() {
     setStep('deleting')
     setError('')
     try {
-      // Call Edge Function — handles Cloudflare video deletion + auth user removal
+      // Call Edge Function — handles Cloudflare video deletion + auth user removal.
+      // The function derives the user from this token; it does NOT accept a
+      // userId from the body, so a caller can only ever delete themselves.
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('Your session has expired. Please log in again.')
+
       const fnUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-account`
 
       const res = await fetch(fnUrl, {
@@ -21,17 +27,19 @@ export default function DeleteAccount() {
         headers: {
           'Content-Type': 'application/json',
           'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ userId: user.id }),
       })
 
       const result = await res.json()
       if (!res.ok) throw new Error(result.error || 'Deletion failed')
 
+      setPartial(result.complete === false)
+
       // Sign out locally
       await supabase.auth.signOut()
       setStep('done')
-      setTimeout(() => navigate('/'), 2000)
+      if (result.complete !== false) setTimeout(() => navigate('/'), 2000)
 
     } catch (err) {
       setError(err.message || 'Something went wrong. Please contact hireitrightdpo@gmail.com')
@@ -40,9 +48,15 @@ export default function DeleteAccount() {
   }
 
   if (step === 'done') return (
-    <div style={{ background: '#E1F5EE', borderRadius: 10, padding: '16px 18px', marginTop: 12 }}>
-      <p style={{ fontSize: 14, color: '#0F6E56', fontWeight: 500 }}>✅ Account deleted</p>
-      <p style={{ fontSize: 13, color: '#0F6E56', marginTop: 4 }}>All your data and videos have been permanently removed. Redirecting...</p>
+    <div style={{ background: partial ? '#FDF6E3' : '#E1F5EE', borderRadius: 10, padding: '16px 18px', marginTop: 12 }}>
+      <p style={{ fontSize: 14, color: partial ? '#8A6D1F' : '#0F6E56', fontWeight: 500 }}>
+        {partial ? '⚠️ Account deleted — one item needs follow-up' : '✅ Account deleted'}
+      </p>
+      <p style={{ fontSize: 13, color: partial ? '#8A6D1F' : '#0F6E56', marginTop: 4, lineHeight: 1.6 }}>
+        {partial
+          ? <>Your account and data have been removed, but we could not confirm deletion of every stored file. We have logged this and will complete it. For confirmation contact <a href="mailto:hireitrightdpo@gmail.com" style={{ color: '#8A6D1F' }}>hireitrightdpo@gmail.com</a>.</>
+          : 'All your data and videos have been permanently removed. Redirecting...'}
+      </p>
     </div>
   )
 

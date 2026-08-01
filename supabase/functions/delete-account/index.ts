@@ -1,20 +1,42 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+// Only allow calls from our own origins. Vercel preview URLs are permitted
+// so the flow can be tested before merging to main.
+function corsFor(origin: string | null) {
+  const allowed =
+    origin === 'https://www.hireitright.com' ||
+    origin === 'https://hireitright.com' ||
+    (origin?.endsWith('.vercel.app') ?? false) ||
+    origin === 'http://localhost:5173'
+
+  return {
+    'Access-Control-Allow-Origin': allowed ? origin! : 'https://www.hireitright.com',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  }
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  const cors = corsFor(req.headers.get('Origin'))
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
+
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), {
+      headers: { ...cors, 'Content-Type': 'application/json' },
+      status,
+    })
 
   try {
-    // Get user from JWT
+    // ---------------------------------------------------------------
+    // 1. IDENTITY — the caller can only ever delete themselves.
+    //    userId comes from the verified token, never from the body.
+    //    getUser() validates against the Supabase auth server, so it
+    //    works regardless of ES256/HS256 signing keys.
+    // ---------------------------------------------------------------
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) throw new Error('No auth header')
+    if (!authHeader) return json({ error: 'Not authenticated' }, 401)
 
-    // Create user-scoped client to verify identity
     const userClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_ANON_KEY')!,
@@ -22,85 +44,132 @@ serve(async (req) => {
     )
 
     const { data: { user }, error: userErr } = await userClient.auth.getUser()
-    if (userErr || !user) throw new Error('Unauthorised')
+    if (userErr || !user) return json({ error: 'Not authenticated' }, 401)
 
     const userId = user.id
+
     const ACCOUNT_ID = Deno.env.get('CLOUDFLARE_ACCOUNT_ID')
     const API_TOKEN = Deno.env.get('CLOUDFLARE_API_TOKEN')
 
-    // Admin client (service role) for privileged operations
     const adminClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SERVICE_ROLE_KEY')!
     )
 
-    // 1. Get all Cloudflare video IDs for this user
-    const videoIds: string[] = []
+    // ---------------------------------------------------------------
+    // 2. COLLECT every Cloudflare video id BEFORE deleting any rows.
+    //    Once the rows are gone the ids are unrecoverable and the
+    //    videos would sit in Cloudflare forever, still billing.
+    // ---------------------------------------------------------------
+    const videoIds = new Set<string>()
 
-    // Profile intro video
     const { data: profile } = await adminClient
       .from('profiles')
-      .select('cloudflare_intro_video_id')
+      .select('cloudflare_intro_video_id, avatar_url')
       .eq('id', userId)
-      .single()
+      .maybeSingle()
+
     if (profile?.cloudflare_intro_video_id) {
-      videoIds.push(profile.cloudflare_intro_video_id)
+      videoIds.add(profile.cloudflare_intro_video_id)
     }
 
-    // Video responses from applications
-    const { data: apps } = await adminClient
+    // (a) applications this user made as a candidate
+    const { data: ownApps } = await adminClient
       .from('applications')
       .select('id')
       .eq('candidate_id', userId)
-    if (apps?.length) {
-      const appIds = apps.map((a: { id: string }) => a.id)
+    const ownAppIds = (ownApps ?? []).map((a: { id: string }) => a.id)
+
+    // (b) applications other candidates made to this user's jobs
+    const { data: jobs } = await adminClient
+      .from('jobs')
+      .select('id')
+      .eq('employer_id', userId)
+    const jobIds = (jobs ?? []).map((j: { id: string }) => j.id)
+
+    let inboundAppIds: string[] = []
+    if (jobIds.length > 0) {
+      const { data: inboundApps } = await adminClient
+        .from('applications')
+        .select('id')
+        .in('job_id', jobIds)
+      inboundAppIds = (inboundApps ?? []).map((a: { id: string }) => a.id)
+    }
+
+    const allAppIds = [...new Set([...ownAppIds, ...inboundAppIds])]
+
+    if (allAppIds.length > 0) {
       const { data: videos } = await adminClient
         .from('video_responses')
         .select('cloudflare_video_id')
-        .in('application_id', appIds)
-      videos?.forEach((v: { cloudflare_video_id: string }) => {
-        if (v.cloudflare_video_id) videoIds.push(v.cloudflare_video_id)
-      })
+        .in('application_id', allAppIds)
+
+      for (const v of videos ?? []) {
+        if (v.cloudflare_video_id) videoIds.add(v.cloudflare_video_id)
+      }
     }
 
-    // 2. Delete videos from Cloudflare Stream
+    // ---------------------------------------------------------------
+    // 3. DELETE videos from Cloudflare Stream.
+    // ---------------------------------------------------------------
+    const idList = [...videoIds]
+    let videosDeleted = 0
+    const videosFailed: string[] = []
+
     const cfResults = await Promise.allSettled(
-      videoIds.map(id =>
-        fetch(`https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/stream/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${API_TOKEN}` }
-        })
+      idList.map(id =>
+        fetch(
+          `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/stream/${id}`,
+          { method: 'DELETE', headers: { 'Authorization': `Bearer ${API_TOKEN}` } }
+        )
       )
     )
-    console.log(`Deleted ${cfResults.filter(r => r.status === 'fulfilled').length}/${videoIds.length} Cloudflare videos`)
 
-    // 3. Delete avatar from Supabase Storage
-    await adminClient.storage.from('Avatars')
-      .remove([`${userId}/avatar.jpg`, `${userId}/avatar.png`, `${userId}/avatar.webp`])
-      .catch(() => {})
+    cfResults.forEach((r, i) => {
+      // Cloudflare returns 404 if already gone — treat that as success.
+      if (r.status === 'fulfilled' && (r.value.ok || r.value.status === 404)) {
+        videosDeleted++
+      } else {
+        videosFailed.push(idList[i])
+        console.error(`Cloudflare delete failed for ${idList[i]}`)
+      }
+    })
 
-    // 4. Delete all DB data in dependency order
+    // ---------------------------------------------------------------
+    // 4. DELETE avatar. List the folder rather than guessing extensions
+    //    — uploads keep the original extension, so .jpeg was surviving.
+    // ---------------------------------------------------------------
+    let avatarDeleted = true
+    const { data: avatarFiles } = await adminClient.storage
+      .from('Avatars')
+      .list(userId)
+
+    if (avatarFiles && avatarFiles.length > 0) {
+      const paths = avatarFiles.map(f => `${userId}/${f.name}`)
+      const { error: rmErr } = await adminClient.storage
+        .from('Avatars')
+        .remove(paths)
+      if (rmErr) {
+        avatarDeleted = false
+        console.error('Avatar delete failed:', rmErr.message)
+      }
+    }
+
+    // Fallback in case avatar_url points outside the user folder
+    if (profile?.avatar_url && !profile.avatar_url.startsWith('http')) {
+      await adminClient.storage.from('Avatars').remove([profile.avatar_url])
+    }
+
+    // ---------------------------------------------------------------
+    // 5. DELETE database rows in dependency order.
+    // ---------------------------------------------------------------
     await adminClient.from('notifications').delete().eq('user_id', userId)
     await adminClient.from('cloudflare_video_log').delete().eq('user_id', userId)
 
-    if (apps?.length) {
-      const appIds = apps.map((a: { id: string }) => a.id)
-      await adminClient.from('video_responses').delete().in('application_id', appIds)
-      await adminClient.from('projects').delete().in('application_id', appIds)
-      await adminClient.from('applications').delete().in('id', appIds)
-    }
-
-    // Employer applications (where they are the employer via jobs)
-    const { data: jobs } = await adminClient.from('jobs').select('id').eq('employer_id', userId)
-    if (jobs?.length) {
-      const jobIds = jobs.map((j: { id: string }) => j.id)
-      const { data: empApps } = await adminClient.from('applications').select('id').in('job_id', jobIds)
-      if (empApps?.length) {
-        const empAppIds = empApps.map((a: { id: string }) => a.id)
-        await adminClient.from('video_responses').delete().in('application_id', empAppIds)
-        await adminClient.from('notifications').delete().in('id', empAppIds) // clean up related notifications
-        await adminClient.from('applications').delete().in('id', empAppIds)
-      }
+    if (allAppIds.length > 0) {
+      await adminClient.from('video_responses').delete().in('application_id', allAppIds)
+      await adminClient.from('projects').delete().in('application_id', allAppIds)
+      await adminClient.from('applications').delete().in('id', allAppIds)
     }
 
     await adminClient.from('portfolio_items').delete().eq('candidate_id', userId)
@@ -108,20 +177,24 @@ serve(async (req) => {
     await adminClient.from('jobs').delete().eq('employer_id', userId)
     await adminClient.from('profiles').delete().eq('id', userId)
 
-    // 5. Delete auth user (permanent, irreversible)
+    // ---------------------------------------------------------------
+    // 6. DELETE the auth user last, so a mid-way failure is retryable.
+    // ---------------------------------------------------------------
     const { error: deleteErr } = await adminClient.auth.admin.deleteUser(userId)
     if (deleteErr) throw deleteErr
 
-    return new Response(
-      JSON.stringify({ success: true, videosDeleted: videoIds.length }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    // Report what actually happened — the UI should not claim a
+    // complete wipe if part of it failed (PDPA representation).
+    return json({
+      success: true,
+      complete: videosFailed.length === 0 && avatarDeleted,
+      videosDeleted,
+      videosTotal: idList.length,
+      videosFailed,
+    })
 
   } catch (err) {
     console.error('Delete account error:', err)
-    return new Response(
-      JSON.stringify({ error: err.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-    )
+    return json({ error: (err as Error).message }, 400)
   }
 })
