@@ -1,11 +1,12 @@
 import { supabase } from './supabase'
 
-export async function notify({ userId, type, title, body, link, recipientEmail }) {
+export async function notify({ userId, type, title, body, link, jobId, recipientEmail }) {
   // In-app notification
   const { error: dbErr } = await supabase.from('notifications').insert({
     user_id: userId, type, title,
     body: body || null,
     link: link || null,
+    job_id: jobId || null,
   })
   if (dbErr) console.error('Notification insert error:', dbErr.message)
 

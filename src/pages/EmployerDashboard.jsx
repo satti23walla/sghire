@@ -214,6 +214,7 @@ export default function EmployerDashboard() {
         title: `Application update: ${selectedJob?.title}`,
         body: statusMessages[status] || `Status updated to ${status}`,
         link: '/candidate',
+        jobId: selectedJob?.id,
         recipientEmail,
       }).then(() => console.log('Notification sent'))
         .catch(e => console.error('Notification error:', e))
@@ -338,6 +339,7 @@ export default function EmployerDashboard() {
       title: `🎉 ${senderLine} wants to meet you!`,
       body: `${inviteType === 'phone' ? 'Phone call' : 'Online meeting'} on ${dateFormatted} at ${displayTime}`,
       link: '/candidate',
+      jobId: selectedJob?.id,
     }).catch(() => {})
 
     // Save interview details to application

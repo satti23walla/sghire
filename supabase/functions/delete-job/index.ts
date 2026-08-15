@@ -104,27 +104,29 @@ serve(async (req) => {
       else videosFailed.push(videoIds[i])
     })
 
-    // --- 5. Tell the candidates their application is gone.
-    //     They recorded a video for this role; silently dropping it is not fair. ---
-    if (candidateIds.length > 0) {
-      const rows = candidateIds.map(cid => ({
-        user_id: cid,
-        type: 'job_removed',
-        title: 'A role you applied to was removed',
-        body: `${job.company_name || 'The employer'} has withdrawn "${job.title}". Your application for this role is no longer active.`,
-        link: '/dashboard',
-        read: false,
-      }))
-      await adminClient.from('notifications').insert(rows)
-    }
-
-    // --- 6. Delete. Cascade removes applications and video_responses. ---
+    // --- 5. Delete. Cascade removes applications, video_responses, and any
+    //     notifications tied to this job (notifications.job_id is ON DELETE
+    //     CASCADE), so nothing is left pointing at a role that no longer exists. ---
     if (appIds.length > 0) {
       await adminClient.from('projects').delete().in('application_id', appIds)
     }
 
     const { error: delErr } = await adminClient.from('jobs').delete().eq('id', jobId)
     if (delErr) throw delErr
+
+    // --- 6. Tell the candidates. Sent AFTER the delete and deliberately with
+    //     no job_id, so the cascade above does not immediately remove it. ---
+    if (candidateIds.length > 0) {
+      const rows = candidateIds.map(cid => ({
+        user_id: cid,
+        type: 'job_removed',
+        title: 'A role you applied to was removed',
+        body: `${job.company_name || 'The employer'} has withdrawn "${job.title}". Your application for this role is no longer active.`,
+        link: '/candidate',
+        read: false,
+      }))
+      await adminClient.from('notifications').insert(rows)
+    }
 
     return json({
       success: true,

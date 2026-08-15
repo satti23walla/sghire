@@ -91,6 +91,7 @@ export default function JobDetail() {
             title: `New application for ${job.title}`,
             body: `${profile?.full_name || 'A candidate'} applied to your role.`,
             link: `/candidate/${user.id}`,
+            jobId: job.id,
             recipientEmail: emp?.email,
           })
         }).catch(() => {})

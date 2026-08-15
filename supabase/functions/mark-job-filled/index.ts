@@ -139,7 +139,7 @@ serve(async (req) => {
         type: 'job_filled',
         title: 'A role you applied to has been filled',
         body: `${job.company_name || 'The employer'} has filled "${job.title}". Your video response for this role has been deleted.`,
-        link: '/dashboard',
+        link: '/candidate',
         read: false,
       }))
       await adminClient.from('notifications').insert(rows)
