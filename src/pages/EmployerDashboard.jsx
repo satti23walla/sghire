@@ -20,6 +20,8 @@ export default function EmployerDashboard() {
   const [tab, setTab] = useState('jobs')
   const [jobs, setJobs] = useState([])
   const [confirmDelete, setConfirmDelete] = useState(null) // job pending deletion
+  const [confirmFilled, setConfirmFilled] = useState(null) // job pending "filled"
+  const [filling, setFilling] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
   const [selectedJob, setSelectedJob] = useState(null)
@@ -111,6 +113,38 @@ export default function EmployerDashboard() {
       await loadJobs()
     }
     setCreating(false)
+  }
+
+  async function markJobFilled(job) {
+    setFilling(true)
+    setDeleteError('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('Your session has expired. Please log in again.')
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mark-job-filled`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ jobId: job.id }),
+        }
+      )
+
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Could not close this role')
+
+      setConfirmFilled(null)
+      await loadJobs()
+      if (selectedJob?.id === job.id) await loadApplications(job.id)
+    } catch (err) {
+      setDeleteError(err.message)
+    }
+    setFilling(false)
   }
 
   async function deleteJob(job) {
@@ -543,10 +577,12 @@ export default function EmployerDashboard() {
                       )}
                     </p>
                   </div>
-                  <span className="badge" style={job.is_active
-                    ? { background: '#E1F5EE', color: '#0F6E56' }
-                    : { background: '#f4f4f2', color: '#888' }}>
-                    {job.is_active ? 'Active' : 'Inactive'}
+                  <span className="badge" style={job.filled_at
+                    ? { background: '#EDE7F6', color: '#5E35B1' }
+                    : job.is_active
+                      ? { background: '#E1F5EE', color: '#0F6E56' }
+                      : { background: '#f4f4f2', color: '#888' }}>
+                    {job.filled_at ? 'Filled' : job.is_active ? 'Active' : 'Inactive'}
                   </span>
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
@@ -560,14 +596,62 @@ export default function EmployerDashboard() {
                   >
                     {job.is_active ? 'Deactivate' : 'Reactivate'}
                   </button>
+                  {!job.filled_at && (
+                    <button
+                      className="btn btn-outline"
+                      style={{ fontSize: 12, padding: '5px 12px', color: '#5E35B1' }}
+                      onClick={() => { setConfirmFilled(job); setConfirmDelete(null); setDeleteError('') }}
+                    >
+                      Mark as filled
+                    </button>
+                  )}
                   <button
                     className="btn btn-outline"
                     style={{ fontSize: 12, padding: '5px 12px', color: '#C0392B' }}
-                    onClick={() => { setConfirmDelete(job); setDeleteError('') }}
+                    onClick={() => { setConfirmDelete(job); setConfirmFilled(null); setDeleteError('') }}
                   >
                     Delete
                   </button>
                 </div>
+
+                {confirmFilled?.id === job.id && (
+                  <div style={{ marginTop: 12, padding: '12px 14px', borderRadius: 8, background: '#F5F1FC', border: '1px solid #DCD0F0' }}>
+                    <p style={{ fontSize: 13, fontWeight: 500, color: '#5E35B1', marginBottom: 6 }}>
+                      Mark "{job.title}" as filled?
+                    </p>
+                    <p style={{ fontSize: 12.5, color: '#4A3B6B', lineHeight: 1.6, marginBottom: 10 }}>
+                      This closes the role to new applicants and <strong>permanently deletes every
+                      video response</strong> candidates recorded for it
+                      {job.applicationCount > 0 && <> ({job.applicationCount} {job.applicationCount === 1 ? 'application' : 'applications'})</>}.
+                      <br /><br />
+                      You keep the record of who applied and what you decided. The videos are gone —
+                      download anything you still need first.
+                    </p>
+
+                    {deleteError && (
+                      <p style={{ fontSize: 12, color: '#C0392B', marginBottom: 8 }}>{deleteError}</p>
+                    )}
+
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        className="btn"
+                        style={{ fontSize: 12, padding: '6px 14px', background: '#5E35B1', color: '#fff' }}
+                        disabled={filling}
+                        onClick={() => markJobFilled(job)}
+                      >
+                        {filling ? 'Closing...' : 'Yes, role is filled'}
+                      </button>
+                      <button
+                        className="btn btn-outline"
+                        style={{ fontSize: 12, padding: '6px 14px' }}
+                        disabled={filling}
+                        onClick={() => { setConfirmFilled(null); setDeleteError('') }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {confirmDelete?.id === job.id && (
                   <div style={{ marginTop: 12, padding: '12px 14px', borderRadius: 8, background: '#FDF3F2', border: '1px solid #F5D5D0' }}>
