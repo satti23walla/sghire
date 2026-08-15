@@ -19,6 +19,9 @@ export default function EmployerDashboard() {
   const navigate = useNavigate()
   const [tab, setTab] = useState('jobs')
   const [jobs, setJobs] = useState([])
+  const [confirmDelete, setConfirmDelete] = useState(null) // job pending deletion
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
   const [selectedJob, setSelectedJob] = useState(null)
   const [applications, setApplications] = useState([])
   const [loadingJobs, setLoadingJobs] = useState(true)
@@ -55,10 +58,14 @@ export default function EmployerDashboard() {
 
   async function loadJobs() {
     const { data } = await supabase
-      .from('jobs').select('*')
+      .from('jobs')
+      .select('*, applications(count)')
       .eq('employer_id', profile.id)
       .order('created_at', { ascending: false })
-    setJobs(data || [])
+    setJobs((data || []).map(j => ({
+      ...j,
+      applicationCount: j.applications?.[0]?.count ?? 0,
+    })))
     setLoadingJobs(false)
   }
 
@@ -104,6 +111,38 @@ export default function EmployerDashboard() {
       await loadJobs()
     }
     setCreating(false)
+  }
+
+  async function deleteJob(job) {
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('Your session has expired. Please log in again.')
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-job`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ jobId: job.id }),
+        }
+      )
+
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Could not delete this role')
+
+      setConfirmDelete(null)
+      if (selectedJob?.id === job.id) { setSelectedJob(null); setApplications([]) }
+      await loadJobs()
+    } catch (err) {
+      setDeleteError(err.message)
+    }
+    setDeleting(false)
   }
 
   async function toggleJobStatus(job) {
@@ -499,6 +538,9 @@ export default function EmployerDashboard() {
                     <p style={{ fontWeight: 500, fontSize: 14, marginBottom: 2 }}>{job.title}</p>
                     <p style={{ fontSize: 12, color: '#666' }}>
                       {[job.location, job.job_type].filter(Boolean).join(' · ')}
+                      {job.applicationCount > 0 && (
+                        <> · <strong>{job.applicationCount}</strong> {job.applicationCount === 1 ? 'applicant' : 'applicants'}</>
+                      )}
                     </p>
                   </div>
                   <span className="badge" style={job.is_active
@@ -518,7 +560,60 @@ export default function EmployerDashboard() {
                   >
                     {job.is_active ? 'Deactivate' : 'Reactivate'}
                   </button>
+                  <button
+                    className="btn btn-outline"
+                    style={{ fontSize: 12, padding: '5px 12px', color: '#C0392B' }}
+                    onClick={() => { setConfirmDelete(job); setDeleteError('') }}
+                  >
+                    Delete
+                  </button>
                 </div>
+
+                {confirmDelete?.id === job.id && (
+                  <div style={{ marginTop: 12, padding: '12px 14px', borderRadius: 8, background: '#FDF3F2', border: '1px solid #F5D5D0' }}>
+                    <p style={{ fontSize: 13, fontWeight: 500, color: '#C0392B', marginBottom: 6 }}>
+                      Delete "{job.title}"?
+                    </p>
+                    {job.applicationCount > 0 ? (
+                      <p style={{ fontSize: 12.5, color: '#7B3F35', lineHeight: 1.6, marginBottom: 10 }}>
+                        This role has <strong>{job.applicationCount} {job.applicationCount === 1 ? 'application' : 'applications'}</strong>.
+                        Deleting it permanently removes {job.applicationCount === 1 ? 'that application' : 'those applications'} and
+                        any video {job.applicationCount === 1 ? 'response' : 'responses'} candidates recorded for it.
+                        {' '}{job.applicationCount === 1 ? 'The candidate' : 'Those candidates'} will be notified.
+                        <br /><br />
+                        If you have finished hiring but want to keep the applications,
+                        use <strong>Deactivate</strong> instead — it hides the role from candidates without deleting anything.
+                      </p>
+                    ) : (
+                      <p style={{ fontSize: 12.5, color: '#7B3F35', lineHeight: 1.6, marginBottom: 10 }}>
+                        No one has applied to this role yet, so nothing else will be affected.
+                      </p>
+                    )}
+
+                    {deleteError && (
+                      <p style={{ fontSize: 12, color: '#C0392B', marginBottom: 8 }}>{deleteError}</p>
+                    )}
+
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        className="btn"
+                        style={{ fontSize: 12, padding: '6px 14px', background: '#C0392B', color: '#fff' }}
+                        disabled={deleting}
+                        onClick={() => deleteJob(job)}
+                      >
+                        {deleting ? 'Deleting...' : 'Yes, delete permanently'}
+                      </button>
+                      <button
+                        className="btn btn-outline"
+                        style={{ fontSize: 12, padding: '6px 14px' }}
+                        disabled={deleting}
+                        onClick={() => { setConfirmDelete(null); setDeleteError('') }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))
           )}
