@@ -33,9 +33,6 @@ export default function VideoPlayer({ cloudflareVideoId, fallbackUrl, label = 'W
         body: JSON.stringify({ videoId: cloudflareVideoId }),
       })
       const data = await res.json()
-      console.log('[VideoPlayer] cloudflareVideoId:', cloudflareVideoId)
-      console.log('[VideoPlayer] response status:', res.status)
-      console.log('[VideoPlayer] response data:', JSON.stringify(data))
 
       if (res.status === 202 || data?.error === 'processing') {
         setError('⏳ Video is still processing — try again in 1–2 minutes.')
@@ -53,9 +50,37 @@ export default function VideoPlayer({ cloudflareVideoId, fallbackUrl, label = 'W
     }
   }
 
+  function closeVideo() {
+    // Drop the signed URL as well as hiding the player, so the iframe is
+    // torn down and playback actually stops.
+    setPlaying(false)
+    setSignedUrl(null)
+    setError('')
+  }
+
   if (playing && signedUrl) {
     return (
       <div style={{ borderRadius: 10, overflow: 'hidden', background: '#000' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '6px 8px 6px 12px', background: '#1A1A1A',
+        }}>
+          <span style={{ fontSize: 12, color: '#DDD', fontWeight: 500 }}>{label}</span>
+          <button
+            type="button"
+            onClick={closeVideo}
+            aria-label="Close video"
+            title="Close video"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: 'rgba(255,255,255,0.12)', border: 'none', borderRadius: 6,
+              color: '#fff', fontSize: 12, padding: '4px 10px', cursor: 'pointer',
+              lineHeight: 1.4,
+            }}
+          >
+            Close ✕
+          </button>
+        </div>
         <iframe
           src={signedUrl}
           title={label}
@@ -71,7 +96,7 @@ export default function VideoPlayer({ cloudflareVideoId, fallbackUrl, label = 'W
 
   return (
     <div>
-      <button onClick={loadVideo} disabled={loading}
+      <button type="button" onClick={loadVideo} disabled={loading}
         style={{
           display: 'flex', alignItems: 'center', gap: 10, width: '100%',
           background: '#E1F5EE', border: 'none', borderRadius: 10,
