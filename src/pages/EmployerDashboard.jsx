@@ -22,6 +22,7 @@ export default function EmployerDashboard() {
   const [confirmDelete, setConfirmDelete] = useState(null) // job pending deletion
   const [confirmFilled, setConfirmFilled] = useState(null) // job pending "filled"
   const [filling, setFilling] = useState(false)
+  const [fillError, setFillError] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState('')
   const [selectedJob, setSelectedJob] = useState(null)
@@ -117,7 +118,7 @@ export default function EmployerDashboard() {
 
   async function markJobFilled(job) {
     setFilling(true)
-    setDeleteError('')
+    setFillError('')
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) throw new Error('Your session has expired. Please log in again.')
@@ -136,13 +137,18 @@ export default function EmployerDashboard() {
       )
 
       const result = await res.json()
-      if (!res.ok) throw new Error(result.error || 'Could not close this role')
+      if (!res.ok) {
+        if (result.code === 'NOT_FOUND' || res.status === 404) {
+          throw new Error('The mark-job-filled function is not deployed in Supabase yet.')
+        }
+        throw new Error(result.error || result.message || `Could not close this role (${res.status})`)
+      }
 
       setConfirmFilled(null)
       await loadJobs()
       if (selectedJob?.id === job.id) await loadApplications(job.id)
     } catch (err) {
-      setDeleteError(err.message)
+      setFillError(err.message)
     }
     setFilling(false)
   }
@@ -168,7 +174,12 @@ export default function EmployerDashboard() {
       )
 
       const result = await res.json()
-      if (!res.ok) throw new Error(result.error || 'Could not delete this role')
+      if (!res.ok) {
+        if (result.code === 'NOT_FOUND' || res.status === 404) {
+          throw new Error('The delete-job function is not deployed in Supabase yet.')
+        }
+        throw new Error(result.error || result.message || `Could not delete this role (${res.status})`)
+      }
 
       setConfirmDelete(null)
       if (selectedJob?.id === job.id) { setSelectedJob(null); setApplications([]) }
@@ -602,7 +613,7 @@ export default function EmployerDashboard() {
                     <button
                       className="btn btn-outline"
                       style={{ fontSize: 12, padding: '5px 12px', color: '#5E35B1' }}
-                      onClick={() => { setConfirmFilled(job); setConfirmDelete(null); setDeleteError('') }}
+                      onClick={() => { setConfirmFilled(job); setConfirmDelete(null); setFillError('') }}
                     >
                       Mark as filled
                     </button>
@@ -630,8 +641,8 @@ export default function EmployerDashboard() {
                       download anything you still need first.
                     </p>
 
-                    {deleteError && (
-                      <p style={{ fontSize: 12, color: '#C0392B', marginBottom: 8 }}>{deleteError}</p>
+                    {fillError && (
+                      <p style={{ fontSize: 12, color: '#C0392B', marginBottom: 8 }}>{fillError}</p>
                     )}
 
                     <div style={{ display: 'flex', gap: 8 }}>
@@ -647,7 +658,7 @@ export default function EmployerDashboard() {
                         className="btn btn-outline"
                         style={{ fontSize: 12, padding: '6px 14px' }}
                         disabled={filling}
-                        onClick={() => { setConfirmFilled(null); setDeleteError('') }}
+                        onClick={() => { setConfirmFilled(null); setFillError('') }}
                       >
                         Cancel
                       </button>
