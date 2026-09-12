@@ -17,6 +17,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false)
   const [resending, setResending] = useState(false)
   const [error, setError] = useState('')
+  const [existingEmail, setExistingEmail] = useState(false)
   const [success, setSuccess] = useState('')
   const otpRefs = useRef([])
 
@@ -28,7 +29,7 @@ export default function Auth() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError(''); setLoading(true)
+    setError(''); setExistingEmail(false); setLoading(true)
     try {
       if (mode === 'login') {
         await signIn({ email, password })
@@ -42,10 +43,18 @@ export default function Auth() {
         setStep('otp') // show OTP screen
       }
     } catch (err) {
+      if (err.code === 'EMAIL_EXISTS') setExistingEmail(true)
       setError(err.message || 'Something went wrong')
     } finally {
       setLoading(false)
     }
+  }
+
+  function switchToLogin() {
+    setMode('login')
+    setError('')
+    setExistingEmail(false)
+    setPassword('')
   }
 
   function handleOtpChange(i, val) {
@@ -192,10 +201,10 @@ export default function Auth() {
   return (
     <div style={{ maxWidth: 400, margin: '40px auto' }}>
       <div className="subtabs" style={{ marginBottom: 24 }}>
-        <button className={`subtab${mode === 'login' ? ' active' : ''}`} onClick={() => { setMode('login'); setError('') }}>
+        <button className={`subtab${mode === 'login' ? ' active' : ''}`} onClick={() => { setMode('login'); setError(''); setExistingEmail(false) }}>
           Sign in
         </button>
-        <button className={`subtab${mode === 'signup' ? ' active' : ''}`} onClick={() => { setMode('signup'); setError('') }}>
+        <button className={`subtab${mode === 'signup' ? ' active' : ''}`} onClick={() => { setMode('signup'); setError(''); setExistingEmail(false) }}>
           Create account
         </button>
       </div>
@@ -208,6 +217,16 @@ export default function Auth() {
         {error && (
           <div style={{ background: '#FAECE7', color: '#D85A30', padding: '10px 12px', borderRadius: 8, fontSize: 13, marginBottom: 14 }}>
             {error}
+            {existingEmail && (
+              <button type="button" onClick={switchToLogin}
+                style={{
+                  display: 'block', marginTop: 8, padding: 0, border: 'none',
+                  background: 'none', color: '#993C1D', fontSize: 13,
+                  fontWeight: 500, textDecoration: 'underline', cursor: 'pointer'
+                }}>
+                Sign in instead
+              </button>
+            )}
           </div>
         )}
 

@@ -47,19 +47,61 @@ export function AuthProvider({ children }) {
     if (user) await fetchProfile(user.id)
   }
 
+  function emailExistsError() {
+    const err = new Error('An account with this email already exists. Try signing in instead.')
+    err.code = 'EMAIL_EXISTS'
+    return err
+  }
+
   async function signUp({ email, password, role, fullName, companyName }) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          role,
-          full_name: fullName,
-          company_name: role === 'employer' ? companyName : '',
+    let data, error
+    try {
+      ;({ data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            role,
+            full_name: fullName,
+            company_name: role === 'employer' ? companyName : '',
+          }
         }
+      }))
+    } catch (thrown) {
+      error = thrown
+    }
+
+    if (error) {
+      const msg = (error.message || '').toLowerCase()
+
+      // Supabase returns this only when email confirmation is disabled
+      if (msg.includes('already registered') || msg.includes('already been registered')) {
+        throw emailExistsError()
       }
-    })
-    if (error) throw error
+
+      // A duplicate signup makes Supabase re-send the confirmation email. If that
+      // SMTP call stalls, the browser gets an unreadable response and fetch fails,
+      // so this message has to cover both causes.
+      if (msg.includes('failed to fetch') || msg.includes('load failed') || msg.includes('network')) {
+        throw new Error(
+          'We could not complete signup. If you already have an account with this email, sign in instead — otherwise check your connection and try again.'
+        )
+      }
+
+      if (msg.includes('rate limit') || msg.includes('too many')) {
+        throw new Error('Too many attempts. Please wait a few minutes and try again.')
+      }
+
+      throw error
+    }
+
+    // With email confirmation on, Supabase does not error on a duplicate — it
+    // returns a placeholder user with an empty identities array to avoid
+    // revealing which emails are registered. That empty array is the signal.
+    if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      throw emailExistsError()
+    }
+
     // Profile is created automatically by database trigger (handle_new_user)
     // No manual INSERT needed — trigger runs as SECURITY DEFINER, bypasses RLS
     return data
