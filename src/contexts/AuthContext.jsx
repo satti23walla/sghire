@@ -53,6 +53,68 @@ export function AuthProvider({ children }) {
     return err
   }
 
+  // Shared mapping so every auth call reports network and throttle failures the
+  // same way. Supabase's "For security purposes..." message already tells the
+  // user how long to wait, so it is passed through untouched.
+  function friendlyAuthError(error, fallback) {
+    const msg = (error?.message || '').toLowerCase()
+    if (msg.includes('failed to fetch') || msg.includes('load failed') || msg.includes('networkerror')) {
+      return new Error('We could not reach the server. Check your connection and try again.')
+    }
+    if (msg.includes('rate limit') || msg.includes('too many requests')) {
+      return new Error('Too many attempts. Please wait a few minutes and try again.')
+    }
+    return error instanceof Error ? error : new Error(fallback)
+  }
+
+  // Sends the recovery email. Supabase does not error for an unknown address,
+  // so the caller must not treat success as proof the account exists.
+  async function requestPasswordReset(email) {
+    let error
+    try {
+      ;({ error } = await supabase.auth.resetPasswordForEmail(email))
+    } catch (thrown) {
+      error = thrown
+    }
+    if (error) throw friendlyAuthError(error, 'Could not send the reset code')
+  }
+
+  // Verifying a recovery code opens a real session — that is what authorises
+  // the password change that follows. Callers must suppress any redirect until
+  // updatePassword has succeeded.
+  async function verifyRecoveryCode({ email, token }) {
+    let data, error
+    try {
+      ;({ data, error } = await supabase.auth.verifyOtp({ email, token, type: 'recovery' }))
+    } catch (thrown) {
+      error = thrown
+    }
+    if (error) {
+      const msg = (error.message || '').toLowerCase()
+      if (msg.includes('expired') || msg.includes('invalid')) {
+        throw new Error('That code is invalid or has expired. Request a new one below.')
+      }
+      throw friendlyAuthError(error, 'Could not verify that code')
+    }
+    return data
+  }
+
+  async function updatePassword(newPassword) {
+    let error
+    try {
+      ;({ error } = await supabase.auth.updateUser({ password: newPassword }))
+    } catch (thrown) {
+      error = thrown
+    }
+    if (error) {
+      const msg = (error.message || '').toLowerCase()
+      if (msg.includes('should be different') || msg.includes('same as the old')) {
+        throw new Error('Your new password must be different from your current one.')
+      }
+      throw friendlyAuthError(error, 'Could not update your password')
+    }
+  }
+
   async function signUp({ email, password, role, fullName, companyName }) {
     let data, error
     try {
@@ -88,11 +150,7 @@ export function AuthProvider({ children }) {
         )
       }
 
-      if (msg.includes('rate limit') || msg.includes('too many')) {
-        throw new Error('Too many attempts. Please wait a few minutes and try again.')
-      }
-
-      throw error
+      throw friendlyAuthError(error, 'Could not create your account')
     }
 
     // With email confirmation on, Supabase does not error on a duplicate — it
@@ -118,7 +176,8 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut, refreshProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, signUp, signIn, signOut, refreshProfile,
+      requestPasswordReset, verifyRecoveryCode, updatePassword }}>
       {children}
     </AuthContext.Provider>
   )
